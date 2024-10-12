@@ -1,0 +1,40 @@
+[package]
+name = "id_core"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+id-map-format = { version = "0.1.0", path = "../id_map_format" }
+
+# core graphics
+wgpu = { version = "22.1.0" }
+wgpu-pp = "1.0.0"
+raw-window-handle = "0.6.2"
+
+# entity component system
+hecs = "0.10.5"
+
+# random math crates
+ultraviolet = { workspace = true }
+encase = { version = "0.10.0", features = ["ultraviolet"] }
+bytemuck = "1.18.0"
+
+# rendering crates
+lyon_tessellation = "1.0.15"
+
+# egui
+egui = "0.29.1"
+egui-wgpu = "0.29.1"
+egui-console = { version = "0.2.0", path = "../third_party/egui_console" }
+
+# parallelism
+rayon = "1.10.0"
+
+# random rust crates
+thiserror = "1.0.64"
+anyhow = "1.0.89"
+multimap = "0.10.0"
+regex = "1.11.0"
+lazy_static = "1.5.0"
+bitflags = "2.6.0"
