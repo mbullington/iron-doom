@@ -38,7 +38,6 @@ Code quality / bugs:
 - [ ] Make ECS for walls/sectors "real time."
 - [ ] Add support for mipmaps
 - [ ] Rewrite shaders with Slang?
-- [ ] Anti-aliasing
 
 Feature enhancements:
 - [ ] Add things (entities)

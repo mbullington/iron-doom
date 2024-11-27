@@ -6,10 +6,13 @@ use wgpu_pp::include_wgsl;
 use anyhow::Result;
 use ultraviolet::UVec2;
 
-use crate::renderer::helpers::{
-    gpu::{GpuFrameTexture, GpuFrameTextureDescriptor},
-    system::SystemEvent,
-    window::{Window, WindowContext, WindowSetup},
+use crate::{
+    cvars::CVarUniforms,
+    renderer::helpers::{
+        gpu::{GpuFrameTexture, GpuFrameTextureDescriptor},
+        system::SystemEvent,
+        window::{Window, WindowContext, WindowSetup},
+    },
 };
 
 use super::{
@@ -26,6 +29,7 @@ pub struct MainWindow {
     render_pipeline_ceiling: wgpu::RenderPipeline,
     render_pipeline_wall: wgpu::RenderPipeline,
 
+    msaa_texture: GpuFrameTexture,
     depth_texture: GpuFrameTexture,
 }
 
@@ -35,6 +39,7 @@ fn _create_sector_render_pipeline(
     pipeline_layout: &wgpu::PipelineLayout,
     sector_data: &SectorData,
     front_face: wgpu::FrontFace,
+    cvars: &CVarUniforms,
 ) -> wgpu::RenderPipeline {
     let vertex_state = wgpu::VertexState {
         buffers: &[wgpu::VertexBufferLayout {
@@ -94,7 +99,7 @@ fn _create_sector_render_pipeline(
         depth_stencil,
         label: None,
         multisample: wgpu::MultisampleState {
-            count: 1,
+            count: cvars.r_msaa,
             mask: !0,
             alpha_to_coverage_enabled: false,
         },
@@ -107,6 +112,7 @@ fn _create_wall_render_pipeline(
     device: &wgpu::Device,
     shader: &wgpu::ShaderModule,
     pipeline_layout: &wgpu::PipelineLayout,
+    cvars: &CVarUniforms,
 ) -> wgpu::RenderPipeline {
     let vertex_state = wgpu::VertexState {
         buffers: &[wgpu::VertexBufferLayout {
@@ -159,7 +165,7 @@ fn _create_wall_render_pipeline(
         depth_stencil,
         label: None,
         multisample: wgpu::MultisampleState {
-            count: 1,
+            count: cvars.r_msaa,
             mask: !0,
             alpha_to_coverage_enabled: false,
         },
@@ -185,6 +191,9 @@ pub fn main_window() -> impl WindowSetup<UC> {
             label: Some("Shader"),
             source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_wgsl!("./shaders/sector.wgsl"))),
         });
+
+        let world = context.user_context.world.clone();
+        let cvars = CVarUniforms::from_cvars(&world.borrow().cvars);
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[
@@ -239,6 +248,7 @@ pub fn main_window() -> impl WindowSetup<UC> {
             &pipeline_layout,
             sector_data,
             wgpu::FrontFace::Cw,
+            &cvars,
         );
         let render_pipeline_ceiling = _create_sector_render_pipeline(
             device,
@@ -246,6 +256,7 @@ pub fn main_window() -> impl WindowSetup<UC> {
             &pipeline_layout,
             sector_data,
             wgpu::FrontFace::Ccw,
+            &cvars,
         );
 
         let shader_wall = device.create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -254,7 +265,17 @@ pub fn main_window() -> impl WindowSetup<UC> {
         });
 
         let render_pipeline_wall =
-            _create_wall_render_pipeline(device, &shader_wall, &pipeline_layout);
+            _create_wall_render_pipeline(device, &shader_wall, &pipeline_layout, &cvars);
+
+        let msaa_texture = GpuFrameTexture::new(
+            device,
+            &size,
+            GpuFrameTextureDescriptor {
+                label: Some("MainWindow::msaa_texture"),
+                sample_count: cvars.r_msaa,
+                ..Default::default()
+            },
+        );
 
         let depth_texture = GpuFrameTexture::new(
             device,
@@ -262,6 +283,7 @@ pub fn main_window() -> impl WindowSetup<UC> {
             GpuFrameTextureDescriptor {
                 label: Some("MainWindow::depth_texture"),
                 format: wgpu::TextureFormat::Depth32Float,
+                sample_count: cvars.r_msaa,
                 ..Default::default()
             },
         );
@@ -275,6 +297,7 @@ pub fn main_window() -> impl WindowSetup<UC> {
             render_pipeline_ceiling,
             render_pipeline_wall,
 
+            msaa_texture,
             depth_texture,
         }))
     }
@@ -315,11 +338,15 @@ impl Window<UC> for MainWindow {
         let sector_data = &context.user_context.sector_data;
         let wall_data = &context.user_context.wall_data;
 
-        let output = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let output = self
+            .msaa_texture
+            .create_texture(device, &context.size)
+            .create_view(&wgpu::TextureViewDescriptor::default());
         let output_depth = self
             .depth_texture
             .create_texture(device, &context.size)
             .create_view(&wgpu::TextureViewDescriptor::default());
+        let output_final = texture.create_view(&wgpu::TextureViewDescriptor::default());
 
         let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
             label: Some("command_encoder"),
@@ -329,7 +356,7 @@ impl Window<UC> for MainWindow {
             let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &output,
-                    resolve_target: None,
+                    resolve_target: Some(&output_final),
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
                         store: wgpu::StoreOp::Store,
