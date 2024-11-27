@@ -7,11 +7,15 @@
 // mouse-look originally didn't exist.
 //
 // There's not a "standard" solution ports do:
+//
 // - Most ports just stretch the texture vertically, and allow y axis
 //   skybox movement.
+//
 // - Russian DOOM has "tall sky textures" for this purpose.
-// - GZDoom uses a spherical mapping, and "fades out" to a solid color when
-//   look up.
+//   Reference:
+//   https://github.com/Russian-Doom/russian-doom/issues/1
+//
+// - GZDoom uses a spherical mapping, and "fades" to a solid color at the top.
 //
 // For now, we **don't tile vertically**, and use a cylindrical mapping.
 //
