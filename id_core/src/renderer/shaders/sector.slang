@@ -11,8 +11,8 @@ struct VSOutput {
 
 [shader("vertex")]
 VSOutput vs_main(
-    float2 coord: POSITION,
-    uint sector_idx: TEXCOORD0,
+    float2 coord: POSITION0,
+    uint sector_idx: POSITION1,
     uint is_ceiling: SV_InstanceID
 ) {
     float height = 0.0f;
@@ -37,7 +37,7 @@ VSOutput vs_main(
 float4 ps_main(VSOutput input): SV_Target {
     let sector = sectors[input.sector_idx];
 
-    // Check for sky texture.
+    // Check for sky texture
     if (input.is_ceiling == 1 && sector.ceiling_palette_image_index == 8) {
         return draw_sky(input.position, input.world_pos);
     }
@@ -47,7 +47,7 @@ float4 ps_main(VSOutput input): SV_Target {
 
     float depth = 0.1 / input.position.w + 16.0;
 
-    // Calculate UV coordinates for 64x64 tile grid.
+    // Calculate UV coordinates for 64x64 tile grid
     float u = frac(input.world_pos.x / 64.0);
     if (u < 0.0) {
         u = 1.0 + u;

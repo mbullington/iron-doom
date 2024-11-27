@@ -1,5 +1,4 @@
-#ifndef HELPERS_H
-#define HELPERS_H
+#pragma once
 
 #include "uniforms.slang"
 
@@ -89,5 +88,3 @@ float4 srgb_to_linear(float4 coord)
     
     return linear;
 }
-
-#endif // HELPERS_H

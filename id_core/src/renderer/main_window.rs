@@ -31,7 +31,8 @@ pub struct MainWindow {
 
 fn _create_sector_render_pipeline(
     device: &wgpu::Device,
-    shader: &wgpu::ShaderModule,
+    shader_vs: &wgpu::ShaderModule,
+    shader_ps: &wgpu::ShaderModule,
     pipeline_layout: &wgpu::PipelineLayout,
     sector_data: &SectorData,
     front_face: wgpu::FrontFace,
@@ -53,7 +54,7 @@ fn _create_sector_render_pipeline(
                 },
             ],
         }],
-        module: shader,
+        module: shader_vs,
         entry_point: "vs_main",
         compilation_options: Default::default(),
     };
@@ -64,8 +65,8 @@ fn _create_sector_render_pipeline(
             blend: None,
             write_mask: wgpu::ColorWrites::ALL,
         })],
-        module: shader,
-        entry_point: "fs_main",
+        module: shader_ps,
+        entry_point: "ps_main",
         compilation_options: Default::default(),
     });
 
@@ -105,7 +106,8 @@ fn _create_sector_render_pipeline(
 
 fn _create_wall_render_pipeline(
     device: &wgpu::Device,
-    shader: &wgpu::ShaderModule,
+    shader_vs: &wgpu::ShaderModule,
+    shader_ps: &wgpu::ShaderModule,
     pipeline_layout: &wgpu::PipelineLayout,
 ) -> wgpu::RenderPipeline {
     let vertex_state = wgpu::VertexState {
@@ -118,7 +120,7 @@ fn _create_wall_render_pipeline(
                 shader_location: 0,
             }],
         }],
-        module: shader,
+        module: shader_vs,
         entry_point: "vs_main",
         compilation_options: Default::default(),
     };
@@ -129,8 +131,8 @@ fn _create_wall_render_pipeline(
             blend: Some(wgpu::BlendState::ALPHA_BLENDING),
             write_mask: wgpu::ColorWrites::ALL,
         })],
-        module: shader,
-        entry_point: "fs_main",
+        module: shader_ps,
+        entry_point: "ps_main",
         compilation_options: Default::default(),
     });
 
@@ -181,9 +183,18 @@ pub fn main_window() -> impl WindowSetup<UC> {
         let palette_colormap_data = &context.user_context.palette_colormap_data;
         let palette_image_data = &context.user_context.palette_image_data;
 
-        let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        let shader_vs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_wgsl!("./shaders/sector.wgsl"))),
+            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_wgsl!(
+                "./shaders/sector_vs_main.wgsl"
+            ))),
+        });
+
+        let shader_ps = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Shader"),
+            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_wgsl!(
+                "./shaders/sector_ps_main.wgsl"
+            ))),
         });
 
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -235,26 +246,41 @@ pub fn main_window() -> impl WindowSetup<UC> {
 
         let render_pipeline_floor = _create_sector_render_pipeline(
             device,
-            &shader,
+            &shader_vs,
+            &shader_ps,
             &pipeline_layout,
             sector_data,
             wgpu::FrontFace::Cw,
         );
         let render_pipeline_ceiling = _create_sector_render_pipeline(
             device,
-            &shader,
+            &shader_vs,
+            &shader_ps,
             &pipeline_layout,
             sector_data,
             wgpu::FrontFace::Ccw,
         );
 
-        let shader_wall = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+        let shader_wall_vs = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
-            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_wgsl!("./shaders/wall.wgsl"))),
+            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_wgsl!(
+                "./shaders/wall_vs_main.wgsl"
+            ))),
         });
 
-        let render_pipeline_wall =
-            _create_wall_render_pipeline(device, &shader_wall, &pipeline_layout);
+        let shader_wall_ps = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("Shader"),
+            source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_wgsl!(
+                "./shaders/wall_ps_main.wgsl"
+            ))),
+        });
+
+        let render_pipeline_wall = _create_wall_render_pipeline(
+            device,
+            &shader_wall_vs,
+            &shader_wall_ps,
+            &pipeline_layout,
+        );
 
         let depth_texture = GpuFrameTexture::new(
             device,

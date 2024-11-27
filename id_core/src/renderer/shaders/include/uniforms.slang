@@ -1,5 +1,4 @@
-#ifndef UNIFORMS_H
-#define UNIFORMS_H
+#pragma once
 
 struct CameraInfo {
     float4x4 view_proj_mat;
@@ -57,5 +56,3 @@ StructuredBuffer<uint> images;
 
 StructuredBuffer<WadSector> sectors;
 StructuredBuffer<WadWall> walls;
-
-#endif // UNIFORMS_H

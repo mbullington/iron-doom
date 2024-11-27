@@ -1,5 +1,4 @@
-#ifndef SKY_H
-#define SKY_H
+#pragma once
 
 #include "uniforms.slang"
 #include "helpers.slang"
@@ -10,7 +9,7 @@ float4 draw_sky(float4 position, float3 world_pos) {
     let delta = world_pos - ubo.camera_info.camera_pos;
 
     uint palette_image_index = 8;
-    let dims = sample_image_width_height(palette_image_index);
+    let dims = get_image_width_height(palette_image_index);
 
     // Because we allow for mouse look,
     // we need to fix delta.x and delta.z somehow.    
@@ -23,5 +22,3 @@ float4 draw_sky(float4 position, float3 world_pos) {
     let color = palette[palette_index] / 256.0;
     return srgb_to_linear(float4(color, 1.0));
 }
-
-#endif // SKY_H

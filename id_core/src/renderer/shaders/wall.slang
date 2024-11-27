@@ -16,7 +16,7 @@ struct VSOutput {
 
 [shader("vertex")]
 VSOutput vs_main(
-    float2 coord : POSITION,
+    float2 coord : register(POSITION0),
     uint instance_idx : SV_InstanceID
 ) {
     WadWall wall = walls[instance_idx];
