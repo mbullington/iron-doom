@@ -35,7 +35,8 @@ Soon this will be accessible via a Web interface.
 ## TODO
 
 Code quality / bugs:
-- [ ] Finish ECS conversion
+- [X] Finish ECS conversion
+- [ ] Make ECS for walls/sectors "real time."
 - [ ] Add support for mipmaps
 - [ ] Fix sky shader
 

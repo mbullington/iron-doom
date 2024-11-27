@@ -8,7 +8,9 @@ use multimap::MultiMap;
 use ultraviolet::Vec2;
 
 use crate::{
-    components::{CSector, CTexture, CTexturePurpose, CTextureSky},
+    components::{
+        CSector, CTexture, CTextureFloor, CTexturePurpose, CTextureSky, CTextureSkyFloor,
+    },
     helpers::geom::{Graph2d, PolygonShape2d, Triangles2d},
 };
 
@@ -97,6 +99,7 @@ pub fn init_sector_entities(world: &mut hecs::World, map: &Map) {
             let mut builder = EntityBuilder::new();
             builder.add(CSector {
                 triangles,
+                sector_index: i,
                 floor_height: sector.floor_height,
                 ceiling_height: sector.ceiling_height,
                 light_level: sector.light_level,
@@ -106,25 +109,23 @@ pub fn init_sector_entities(world: &mut hecs::World, map: &Map) {
 
             if sector.ceiling_flat != "-" {
                 if sector.ceiling_flat == F_SKY1 {
-                    builder.add(CTextureSky { is_ceiling: true });
+                    builder.add(CTextureSky {});
                 } else {
                     builder.add(CTexture {
                         purpose: CTexturePurpose::Flat,
                         texture_name: sector.ceiling_flat.clone(),
-                        is_ceiling: true,
                     });
                 }
             }
 
             if sector.floor_flat != "-" {
-                if sector.ceiling_flat == F_SKY1 {
-                    builder.add(CTextureSky { is_ceiling: false });
+                if sector.floor_flat == F_SKY1 {
+                    builder.add(CTextureSkyFloor(CTextureSky {}));
                 } else {
-                    builder.add(CTexture {
+                    builder.add(CTextureFloor(CTexture {
                         purpose: CTexturePurpose::Flat,
                         texture_name: sector.floor_flat.clone(),
-                        is_ceiling: false,
-                    });
+                    }));
                 }
             }
 

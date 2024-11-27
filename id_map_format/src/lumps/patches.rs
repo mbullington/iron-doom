@@ -8,8 +8,8 @@ pub struct PatchColumnSpan {
 
 #[derive(Debug)]
 pub struct Patch {
-    pub width: usize,
-    pub height: usize,
+    pub width: u32,
+    pub height: u32,
 
     pub x_center: i16,
     pub y_center: i16,
@@ -43,16 +43,16 @@ impl Wad {
 
         let lump_bytes = lump.bytes();
 
-        let width = u16_le!(&lump_bytes[0..2]) as usize;
-        let height = u16_le!(&lump_bytes[2..4]) as usize;
+        let width = u16_le!(&lump_bytes[0..2]) as u32;
+        let height = u16_le!(&lump_bytes[2..4]) as u32;
 
         let x_center: i16 = i16_le!(&lump_bytes[4..6]);
         let y_center: i16 = i16_le!(&lump_bytes[6..8]);
 
-        let mut columns: Vec<Vec<PatchColumnSpan>> = Vec::with_capacity(width);
+        let mut columns: Vec<Vec<PatchColumnSpan>> = Vec::with_capacity(width as usize);
 
         for i in 0..(width) {
-            let col_lookup_offset = 8 + i * 4;
+            let col_lookup_offset = (8 + i * 4) as usize;
             let col_lookup =
                 u32_le!(&lump_bytes[col_lookup_offset..col_lookup_offset + 4]) as usize;
 

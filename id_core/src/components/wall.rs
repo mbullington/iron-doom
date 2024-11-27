@@ -4,9 +4,9 @@ use ultraviolet::Vec2;
 bitflags! {
     #[derive(Debug)]
     pub struct CWallType: u32 {
-        const Upper = 0b00000001;
-        const Middle = 0b00000010;
-        const Lower = 0b00000100;
+        const Upper = 0;
+        const Middle = 1;
+        const Lower = 2;
     }
 }
 

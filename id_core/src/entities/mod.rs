@@ -1,6 +1,8 @@
+mod player;
 mod sector;
 mod wall;
 
+pub use player::*;
 pub use sector::*;
 pub use wall::*;
 

@@ -5,18 +5,11 @@ use crate::helpers::Movable;
 
 use super::system::{SystemEvent, SystemKeycode};
 
+#[derive(Default)]
 pub struct MovementController {
     // These are keyboard movements, which should be denormalized with the render.
     // This is a bit of a hack, but it works for now.
     key_presses: HashMap<SystemKeycode, bool>,
-}
-
-impl Default for MovementController {
-    fn default() -> Self {
-        Self {
-            key_presses: HashMap::new(),
-        }
-    }
 }
 
 impl MovementController {
@@ -26,13 +19,16 @@ impl MovementController {
         }
     }
 
-    pub fn handle_event(&mut self, event: &SystemEvent) {
+    pub fn handle_event(&mut self, movable: &mut impl Movable, event: &SystemEvent) {
         match event {
             SystemEvent::KeyDown { keycode, .. } => {
                 self.key_presses.insert(*keycode, true);
             }
             SystemEvent::KeyUp { keycode, .. } => {
                 self.key_presses.insert(*keycode, false);
+            }
+            SystemEvent::MouseMotion { xrel, yrel, .. } => {
+                movable.rotate_pitch_yaw((*yrel as f32) * 2.2, (*xrel as f32) * 2.2);
             }
             _ => {}
         }

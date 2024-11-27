@@ -22,22 +22,23 @@ struct WadSector {
     floor_height: f32,
     ceiling_height: f32,
     // Indexes in the flat array.
-    floor_flat_index: u32,
-    ceiling_flat_index: u32,
+    ceiling_palette_image_index: u32,
+    floor_palette_image_index: u32,
     // Light level.
     light_level: u32
 }
 
-struct WallStorageData {
-    // 0 == middle, 1 == upper, 2 == lower
+struct WadWall {
+    // 0 == upper, 1 == middle, 2 == lower
     wall_type: u32,
 
-    start_vert_index: u32,
-    end_vert_index: u32,
+    start_vert: vec2f,
+    end_vert: vec2f,
 
     sector_index: u32,
     back_sector_index: u32,
-    patch_index: u32,
+
+    palette_image_index: u32,
     
     x_offset: f32,
     y_offset: f32
@@ -50,12 +51,10 @@ struct PatchHeaderStorageData {
 }
 
 @binding(0) @group(0) var<uniform> ubo : UBO;
-@binding(1) @group(0) var<storage> sectors : array<WadSector>;
-@binding(2) @group(0) var<storage> flats : array<u32>; // u8
-@binding(3) @group(0) var<storage> vertices: array<vec2f>;
-@binding(4) @group(0) var<storage> wall_storage_data: array<WallStorageData>;
-@binding(5) @group(0) var<storage> patch_header_storage_data: array<PatchHeaderStorageData>;
-@binding(6) @group(0) var<storage> patches : array<u32>; // u8
-@binding(7) @group(0) var<storage> palette : array<vec3f>;
-@binding(8) @group(0) var<storage> colormap : array<u32>; // u8
 
+@binding(1) @group(0) var<storage> palette : array<vec3f>;
+@binding(2) @group(0) var<storage> colormap : array<u32>; // u8
+@binding(3) @group(0) var<storage> images : array<u32>; // u8 that are u32 aligned
+
+@binding(4) @group(0) var<storage> sectors : array<WadSector>;
+@binding(5) @group(0) var<storage> walls: array<WadWall>;

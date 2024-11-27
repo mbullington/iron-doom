@@ -1,5 +1,6 @@
 #include "include/uniforms.wgsl"
 #include "include/utils.wgsl"
+#include "include/image.wgsl"
 #include "include/sky.wgsl"
 
 struct VsOutput {
@@ -35,7 +36,10 @@ fn fs_main(
     @location(2) is_ceiling: u32,
 ) -> @location(0) vec4f {
     // If it's the second patch index, it's the sky.
-    if is_ceiling == u32(1) && sectors[sector_idx].ceiling_flat_index == u32(1) {
+    if is_ceiling == u32(1) && sectors[sector_idx].ceiling_palette_image_index == u32(8) {
+        return draw_sky(position, world_pos);
+    }
+    if is_ceiling == u32(0) && sectors[sector_idx].floor_palette_image_index == u32(8) {
         return draw_sky(position, world_pos);
     }
 
@@ -52,17 +56,17 @@ fn fs_main(
         v = 1.0 + v;
     }
 
-    var u_index = u32(u * 64.0);
-    var v_index = u32(v * 64.0);
+    var u_index = f32(u * 64.0);
+    var v_index = f32(v * 64.0);
 
-    var flat_index = u32(0);
+    var palette_image_index = u32(0);
     if is_ceiling > u32(0) {
-        flat_index = sectors[sector_idx].ceiling_flat_index;
+        palette_image_index = sectors[sector_idx].ceiling_palette_image_index;
     } else {
-        flat_index = sectors[sector_idx].floor_flat_index;
+        palette_image_index = sectors[sector_idx].floor_palette_image_index;
     }
 
-    var palette_index = GET_U8(flats, flat_index * u32(4096) + u_index * u32(64) + v_index);
+    var palette_index = sample_image(palette_image_index, u_index, v_index);
     var light_index = u32(0);
 
     if ubo.cvar_uniforms.r_fullbright != u32(1) {

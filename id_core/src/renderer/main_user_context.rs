@@ -5,10 +5,10 @@ use encase::ShaderType;
 use ultraviolet::{Mat4, UVec2, Vec2, Vec3};
 use wgpu::BufferUsages;
 
-use crate::{cvars::CVarUniforms, world::World, Stopwatch};
+use crate::{cvars::CVarUniforms, helpers::Camera, world::World, Stopwatch};
 
 use super::{
-    data::{PaletteColormapData, SectorData, WallData},
+    data::{PaletteColormapData, PaletteImageData, SectorData, WallData},
     helpers::{
         egui_system_platform::EguiPlatform,
         gpu::{GpuUniformBuffer, LenOrData::Len},
@@ -35,17 +35,21 @@ pub fn main_user_context(world: Rc<RefCell<World>>) -> impl UserContextSetup<Mai
         // Time how long it takes to parse the wad files.
         let mut stopwatch = Stopwatch::new();
 
-        let (sector_data, wall_data, palette_colormap_data) = {
+        let (palette_colormap_data, palette_image_data, sector_data, wall_data) = {
             let world = world.borrow();
 
-            let wad = &world.wad;
-            let map = &world.map;
+            let palette_colormap_data = PaletteColormapData::new(device, &world.wad)?;
+            let palette_image_data = PaletteImageData::new(device, &world)?;
 
-            let sector_data = SectorData::new(device, wad, map)?;
-            let wall_data = WallData::new(device, wad, map)?;
-            let palette_colormap_data = PaletteColormapData::new(device, wad)?;
+            let sector_data = SectorData::new(device, &world, &palette_image_data)?;
+            let wall_data = WallData::new(device, &world, &sector_data, &palette_image_data)?;
 
-            (sector_data, wall_data, palette_colormap_data)
+            (
+                palette_colormap_data,
+                palette_image_data,
+                sector_data,
+                wall_data,
+            )
         };
 
         Ok(Box::new(MainUserContext {
@@ -54,9 +58,11 @@ pub fn main_user_context(world: Rc<RefCell<World>>) -> impl UserContextSetup<Mai
 
             ubo,
 
+            palette_colormap_data,
+            palette_image_data,
+
             sector_data,
             wall_data,
-            palette_colormap_data,
 
             setup_time: stopwatch.lap(),
         }))
@@ -83,9 +89,11 @@ pub struct MainUserContext {
 
     pub ubo: GpuUniformBuffer<UBO>,
 
+    pub palette_colormap_data: PaletteColormapData,
+    pub palette_image_data: PaletteImageData,
+
     pub sector_data: SectorData,
     pub wall_data: WallData,
-    pub palette_colormap_data: PaletteColormapData,
 
     pub setup_time: Duration,
 }
@@ -96,17 +104,46 @@ impl UserContext for MainUserContext {
         self.egui_user_context.think(context, delta)?;
 
         // Update the camera info, view-projection matrix, and cvars.
-        let camera = &self.world.borrow().camera;
-        let view_proj_mat = camera.get_projection_matrix(context.size) * camera.get_view_matrix();
+        let world = self.world.clone();
+        let z_near = world
+            .borrow()
+            .cvars
+            .get("r_camera_znear")
+            .unwrap()
+            .value
+            .as_f32()
+            .unwrap();
+        let fov = world
+            .borrow()
+            .cvars
+            .get("r_camera_fov")
+            .unwrap()
+            .value
+            .as_f32()
+            .unwrap();
+
+        let camera_info = world.borrow_mut().with_player_pos(|player| {
+            let camera = Camera {
+                movable: player,
+                z_near,
+                fov,
+            };
+
+            let view_proj_mat =
+                camera.get_projection_matrix(context.size) * camera.get_view_matrix();
+
+            CameraInfo {
+                view_proj_mat,
+                screen_size: context.size.into(),
+                camera_pos: player.pos,
+            }
+        })?;
+
         let ubo = &mut self.ubo;
         ubo.write(
             context.queue,
             UBO {
-                camera_info: CameraInfo {
-                    view_proj_mat,
-                    screen_size: context.size.into(),
-                    camera_pos: camera.pos,
-                },
+                camera_info,
                 cvars: CVarUniforms::from_cvars(&self.world.borrow().cvars),
             },
         )?;

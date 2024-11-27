@@ -196,6 +196,7 @@ pub fn main_window() -> impl WindowSetup<UC> {
         let sector_data = &context.user_context.sector_data;
         let wall_data = &context.user_context.wall_data;
         let palette_colormap_data = &context.user_context.palette_colormap_data;
+        let palette_image_data = &context.user_context.palette_image_data;
 
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
@@ -205,30 +206,21 @@ pub fn main_window() -> impl WindowSetup<UC> {
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             entries: &[
                 ubo.bind_group_layout_entry(0, ShaderStages::all()),
-                sector_data
-                    .storage_buf
-                    .bind_group_layout_entry(1, ShaderStages::all()),
-                sector_data
-                    .flat_storage_buf
-                    .bind_group_layout_entry(2, ShaderStages::FRAGMENT),
-                wall_data
-                    .vertices_storage_buffer
-                    .bind_group_layout_entry(3, ShaderStages::all()),
-                wall_data
-                    .wall_storage_buffer
-                    .bind_group_layout_entry(4, ShaderStages::all()),
-                wall_data
-                    .patch_headers_storage_data
-                    .bind_group_layout_entry(5, ShaderStages::all()),
-                wall_data
-                    .patch_storage_buffer
-                    .bind_group_layout_entry(6, ShaderStages::all()),
                 palette_colormap_data
                     .palette_storage_buf
-                    .bind_group_layout_entry(7, ShaderStages::FRAGMENT),
+                    .bind_group_layout_entry(1, ShaderStages::FRAGMENT),
                 palette_colormap_data
                     .colormap_storage_buf
-                    .bind_group_layout_entry(8, ShaderStages::FRAGMENT),
+                    .bind_group_layout_entry(2, ShaderStages::FRAGMENT),
+                palette_image_data
+                    .image_storage_buf
+                    .bind_group_layout_entry(3, ShaderStages::FRAGMENT),
+                sector_data
+                    .sector_buf
+                    .bind_group_layout_entry(4, ShaderStages::all()),
+                wall_data
+                    .wall_buf
+                    .bind_group_layout_entry(5, ShaderStages::all()),
             ],
             label: Some("bind_group_layout"),
         });
@@ -237,24 +229,17 @@ pub fn main_window() -> impl WindowSetup<UC> {
             layout: &bind_group_layout,
             entries: &[
                 ubo.bind_group_descriptor_entry(0),
-                sector_data.storage_buf.bind_group_descriptor_entry(1),
-                sector_data.flat_storage_buf.bind_group_descriptor_entry(2),
-                wall_data
-                    .vertices_storage_buffer
-                    .bind_group_descriptor_entry(3),
-                wall_data.wall_storage_buffer.bind_group_descriptor_entry(4),
-                wall_data
-                    .patch_headers_storage_data
-                    .bind_group_descriptor_entry(5),
-                wall_data
-                    .patch_storage_buffer
-                    .bind_group_descriptor_entry(6),
                 palette_colormap_data
                     .palette_storage_buf
-                    .bind_group_descriptor_entry(7),
+                    .bind_group_descriptor_entry(1),
                 palette_colormap_data
                     .colormap_storage_buf
-                    .bind_group_descriptor_entry(8),
+                    .bind_group_descriptor_entry(2),
+                palette_image_data
+                    .image_storage_buf
+                    .bind_group_descriptor_entry(3),
+                sector_data.sector_buf.bind_group_descriptor_entry(4),
+                wall_data.wall_buf.bind_group_descriptor_entry(5),
             ],
             label: Some("bind_group"),
         });
@@ -269,14 +254,14 @@ pub fn main_window() -> impl WindowSetup<UC> {
             device,
             &shader,
             &pipeline_layout,
-            &sector_data,
+            sector_data,
             wgpu::FrontFace::Cw,
         );
         let render_pipeline_ceiling = _create_sector_render_pipeline(
             device,
             &shader,
             &pipeline_layout,
-            &sector_data,
+            sector_data,
             wgpu::FrontFace::Ccw,
         );
 
@@ -319,25 +304,19 @@ impl Window<UC> for MainWindow {
         event: &SystemEvent,
     ) -> Result<bool> {
         let world = context.user_context.world.clone();
+        world.borrow_mut().with_player_pos(|player_pos| {
+            self.movement_controller.handle_event(player_pos, event);
+        });
 
-        // Handle mouse motion separately from movement controller.
-        // TODO: Combine this.
-        if let SystemEvent::MouseMotion { xrel, yrel, .. } = event {
-            world
-                .borrow_mut()
-                .camera
-                .rotate_pitch_yaw((*yrel as f32) * 2.2, (*xrel as f32) * 2.2);
-        }
-
-        self.movement_controller.handle_event(event);
         Ok(false)
     }
 
     fn think(&mut self, context: &mut WindowContext<UC>, delta: Duration) -> Result<()> {
         let world = context.user_context.world.clone();
+        world.borrow_mut().with_player_pos(|player_pos| {
+            self.movement_controller.think(player_pos, delta);
+        });
 
-        self.movement_controller
-            .think(&mut world.borrow_mut().camera, delta);
         Ok(())
     }
 
@@ -421,9 +400,7 @@ impl Window<UC> for MainWindow {
                     0..(wall_data.wall_quad_vertex_buf.buf.size()
                         / (wall_data.wall_quad_vertex_buf.stride as u64))
                         as u32,
-                    0..(wall_data.wall_storage_buffer.buf.size()
-                        / (wall_data.wall_storage_buffer.stride as u64))
-                        as u32,
+                    0..(wall_data.wall_buf.buf.size() / (wall_data.wall_buf.stride as u64)) as u32,
                 );
             }
         }

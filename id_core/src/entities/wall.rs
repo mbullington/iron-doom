@@ -95,13 +95,12 @@ fn _parse_wall(
         }
 
         // Add either texture, or sky.
-        if sidedef.middle_texture == SKY1 {
-            builder.add(CTextureSky { is_ceiling: false });
+        if texture == SKY1 {
+            builder.add(CTextureSky {});
         } else {
             builder.add(CTexture {
                 purpose: CTexturePurpose::Texture,
-                texture_name: sidedef.middle_texture.clone(),
-                is_ceiling: false,
+                texture_name: texture.to_string(),
             });
         }
 

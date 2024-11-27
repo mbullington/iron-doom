@@ -1,11 +1,12 @@
 #include "include/uniforms.wgsl"
 #include "include/utils.wgsl"
+#include "include/image.wgsl"
 #include "include/sky.wgsl"
 
 struct VsOutput {
     @builtin(position) position: vec4f,
     @location(0) world_pos: vec3f,
-    @location(1) patch_index: u32,
+    @location(1) palette_image_index: u32,
     @location(2) sector_idx: u32,
     @location(3) uv: vec2f,
     @location(4) width: f32,
@@ -20,34 +21,33 @@ fn vs_main(
     @location(0) coord: vec2f,
     @builtin(instance_index) instance_idx: u32,
 ) -> VsOutput {
-    let wall = wall_storage_data[instance_idx];
+    let wall = walls[instance_idx];
+    let sector = sectors[wall.sector_index];
 
-    var start_vert = vertices[wall.start_vert_index];
-    var end_vert = vertices[wall.end_vert_index];
-    var vert_vec = end_vert - start_vert;
-
-    var sector = sectors[wall.sector_index];
+    let start_vert = wall.start_vert;
+    let end_vert = wall.end_vert;
+    let vert_vec = end_vert - start_vert;
 
     // coord goes from 0:0 to 1:1 on the x/y axis.
 
-    let is_upper = wall.wall_type == u32(1);
+    let is_upper = wall.wall_type == u32(0);
     let is_lower = wall.wall_type == u32(2);
 
     var floor = sector.floor_height;
     var ceiling = sector.ceiling_height;
 
     if !is_upper && !is_lower && wall.back_sector_index != 0xFFFFFFFFu {
-        var back_sector = sectors[wall.back_sector_index];
+        let back_sector = sectors[wall.back_sector_index];
         floor = max(sector.floor_height, back_sector.floor_height);
         ceiling = min(sector.ceiling_height, back_sector.ceiling_height);
     }
 
     if is_upper {
-        var back_sector = sectors[wall.back_sector_index];
+        let back_sector = sectors[wall.back_sector_index];
         floor = back_sector.ceiling_height;
         ceiling = sector.ceiling_height;
     } else if is_lower {
-        var back_sector = sectors[wall.back_sector_index];
+        let back_sector = sectors[wall.back_sector_index];
         floor = sector.floor_height;
         ceiling = back_sector.floor_height;
     }
@@ -72,7 +72,7 @@ fn vs_main(
     return VsOutput(
         position,
         world_pos,
-        wall.patch_index,
+        wall.palette_image_index,
         wall.sector_index,
         coord, // uv
         width,
@@ -87,7 +87,7 @@ fn vs_main(
 fn fs_main(
     @builtin(position) position: vec4f,
     @location(0) world_pos: vec3f,
-    @location(1) patch_index: u32,
+    @location(1) palette_image_index: u32,
     @location(2) sector_idx: u32,
     @location(3) uv: vec2f,
     @location(4) width: f32,
@@ -96,26 +96,17 @@ fn fs_main(
     @location(7) y_offset: f32,
     @location(8) light_offset: i32,
 ) -> @location(0) vec4f {
-    // If it's the first patch index, it's the sky.
-    if patch_index == u32(0) {
+    if palette_image_index == u32(8) {
         return draw_sky(position, world_pos);
     }
 
     let depth = 0.1 / position.w + 16.0;
-    let patch_header = patch_header_storage_data[patch_index];
 
     // This is on the X/Z axis.
-    var world_u = u32(mod2(f32(uv.x) * width + x_offset, f32(patch_header.width)));
-    var world_v = u32(mod2(f32(1.0 - uv.y) * height + y_offset, f32(patch_header.height)));
+    var world_u = f32(uv.x) * width + x_offset;
+    var world_v = f32(1.0 - uv.y) * height + y_offset;
 
-    let idx = patch_header.buffer_idx + u32(2) * (world_u * patch_header.height + world_v);
-
-    var is_transparent = GET_U8(patches, idx);
-    if is_transparent == u32(0) {
-        discard;
-    }
-
-    var palette_index = GET_U8(patches, idx + u32(1));
+    var palette_index = sample_image(palette_image_index, world_u, world_v);
     var light_index = u32(0);
 
     if ubo.cvar_uniforms.r_fullbright != u32(1) {

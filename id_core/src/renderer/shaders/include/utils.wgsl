@@ -1,5 +1,8 @@
 fn mod2(x: f32, y: f32) -> f32 {
     var x_mut = x;
+    if abs(x) < 0.0001 {
+        return 0.;
+    }
     while x_mut >= y {
         x_mut = x_mut - y;
     }
