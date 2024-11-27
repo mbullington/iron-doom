@@ -17,10 +17,10 @@ pub struct Triangles2d {
 
 impl Triangles2d {
     pub fn bbox(&self) -> Bounds2d {
-        let mut min_x = std::f32::MAX;
-        let mut min_y = std::f32::MAX;
-        let mut max_x = std::f32::MIN;
-        let mut max_y = std::f32::MIN;
+        let mut min_x = f32::MAX;
+        let mut min_y = f32::MAX;
+        let mut max_x = f32::MIN;
+        let mut max_y = f32::MIN;
 
         for point in &self.points {
             min_x = min_x.min(point.x);

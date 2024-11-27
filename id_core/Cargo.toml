@@ -19,6 +19,7 @@ hecs = "0.10.5"
 ultraviolet = { workspace = true }
 encase = { version = "0.10.0", features = ["ultraviolet"] }
 bytemuck = "1.18.0"
+bvh-arena = "1.1.3"
 
 # rendering crates
 lyon_tessellation = "1.0.15"

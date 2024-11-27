@@ -36,9 +36,13 @@ Soon this will be accessible via a Web interface.
 
 Code quality / bugs:
 - [X] Finish ECS conversion
+- [X] Acceleration for sectors
 - [ ] Make ECS for walls/sectors "real time."
+- [ ] Linedef flags (double-sided, unpegged)
+- [ ] Repeating issue on `SOS_Boom.wad`
 - [ ] Add support for mipmaps
 - [ ] Fix sky shader
+- [ ] Rewrite shaders with Slang
 
 Feature enhancements:
 - [ ] Add things (entities)

@@ -306,7 +306,7 @@ impl Window<UC> for MainWindow {
         let world = context.user_context.world.clone();
         world.borrow_mut().with_player_pos(|player_pos| {
             self.movement_controller.handle_event(player_pos, event);
-        });
+        })?;
 
         Ok(false)
     }
@@ -315,7 +315,7 @@ impl Window<UC> for MainWindow {
         let world = context.user_context.world.clone();
         world.borrow_mut().with_player_pos(|player_pos| {
             self.movement_controller.think(player_pos, delta);
-        });
+        })?;
 
         Ok(())
     }

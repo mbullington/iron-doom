@@ -41,15 +41,15 @@ fn main() -> Result<(), String> {
         Wad::new(bytes).expect("Failed to parse IWAD")
     };
 
-    let pwad = {
-        let mut file = File::open("/Users/michael/Projects/iron-doom/SOS_Boom.wad").unwrap();
-        let mut bytes = Vec::new();
-        file.read_to_end(&mut bytes).unwrap();
-        Wad::new(bytes).expect("Failed to parse IWAD")
-    };
+    // let pwad = {
+    //     let mut file = File::open("/Users/michael/Projects/iron-doom/SOS_Boom.wad").unwrap();
+    //     let mut bytes = Vec::new();
+    //     file.read_to_end(&mut bytes).unwrap();
+    //     Wad::new(bytes).expect("Failed to parse IWAD")
+    // };
 
-    let wad = iwad.merge(pwad);
-    let world = World::new(wad, "MAP32").expect("Failed to create world");
+    let wad = iwad; // .merge(pwad);
+    let world = World::new(wad, "MAP01").expect("Failed to create world");
 
     println!("Merged WADs successfully");
 

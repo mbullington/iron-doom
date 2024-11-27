@@ -74,11 +74,11 @@ fn fs_main(
         light_index = u32(31) - (sectors[sector_idx].light_level >> u32(3));
 
         // Adjust for depth. From eyeballing screenshots, it reduces by 1 every 8 units.
-        light_index = min(light_index + u32(depth / ubo.cvar_uniforms.r_lightfalloff), u32(31));
+        light_index = max(min(light_index + u32(depth / ubo.cvar_uniforms.r_lightfalloff), u32(31)), min(u32(6), light_index));
     }
 
     palette_index = GET_U8(colormap, light_index * u32(256) + palette_index);
-    let color = palette[palette_index] / 255.0;
+    var color = palette[palette_index] / 255.0;
 
     return srgb_to_linear(vec4f(color, 1.0));
 }

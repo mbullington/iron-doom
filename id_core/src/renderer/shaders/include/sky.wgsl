@@ -2,12 +2,12 @@
 #include "image.wgsl"
 #include "utils.wgsl"
 
+#define PI (3.14159)
+
 fn draw_sky(
     position: vec4f,
     world_pos: vec3f
 ) -> vec4f {
-    let x = position.x;
-    let y = position.y;
     let delta = world_pos - ubo.camera_info.camera_pos;
 
     let palette_image_index = u32(8);
@@ -15,7 +15,7 @@ fn draw_sky(
 
     // Because we allow for mouse look, we need to fix delta.x and delta.z somehow.    
 
-    let norm_angle = mod2((atan2(delta.x, delta.z) + 3.14159) / (1.0 * 3.14159), 1.0);
+    let norm_angle = mod2((atan2(delta.x, delta.z) + PI) / PI, 1.0);
     let world_u = f32(dims.x * norm_angle);
     let world_v = f32(dims.y * position.y / ubo.camera_info.screen_size.y);
 
