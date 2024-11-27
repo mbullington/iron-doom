@@ -23,9 +23,9 @@ impl Wad {
         for i in 0..num_palettes {
             let palette_offset = i * 256 * 3;
             let mut palette = [(0, 0, 0); 256];
-            for j in 0..256 {
+            for (j, value) in palette.iter_mut().enumerate() {
                 let color_offset = palette_offset + j * 3;
-                palette[j] = (
+                *value = (
                     lump_bytes[color_offset],
                     lump_bytes[color_offset + 1],
                     lump_bytes[color_offset + 2],

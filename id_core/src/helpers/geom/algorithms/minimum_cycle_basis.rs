@@ -168,6 +168,7 @@ fn _best_by_winding(
     })
 }
 
+#[allow(clippy::nonminimal_bool)]
 fn _better_by_winding(
     v: &Vec2,
     v_so_far: &Vec2,
@@ -238,7 +239,7 @@ pub fn minimum_cycle_basis(graph: &Graph2d) -> Vec<Vec<GraphVertIndex>> {
         }
 
         let walk = _reduce_walk(_closed_walk_from(v, vertices, &adj_map));
-        if walk.len() == 0 {
+        if walk.is_empty() {
             gravestones[v] = true;
             continue;
         }

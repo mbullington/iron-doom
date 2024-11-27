@@ -204,26 +204,23 @@ impl<'surface, UC: UserContext> WindowRunner<'surface, UC> {
     }
 
     pub fn handle_event(&mut self, event: SystemEvent) -> Result<(), WindowRunnerError> {
-        match event {
-            SystemEvent::SizeChanged { width, height } => {
-                self.size.x = width;
-                self.size.y = height;
+        if let SystemEvent::SizeChanged { width, height } = event {
+            self.size.x = width;
+            self.size.y = height;
 
-                self.next_texture.take();
-                self.surface.configure(
-                    &self.device,
-                    &_create_surface_information(self.surface_format, width, height),
-                );
+            self.next_texture.take();
+            self.surface.configure(
+                &self.device,
+                &_create_surface_information(self.surface_format, width, height),
+            );
 
-                // Get the next swapchain.
-                self.next_texture = match self.surface.get_current_texture() {
-                    Ok(frame) => Some(frame),
-                    Err(e) => {
-                        return Err(WindowRunnerError::SurfaceError(e));
-                    }
-                };
-            }
-            _ => {}
+            // Get the next swapchain.
+            self.next_texture = match self.surface.get_current_texture() {
+                Ok(frame) => Some(frame),
+                Err(e) => {
+                    return Err(WindowRunnerError::SurfaceError(e));
+                }
+            };
         }
 
         let mut window_context = WindowContext {

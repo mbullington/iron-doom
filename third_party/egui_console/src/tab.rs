@@ -187,7 +187,7 @@ pub(crate) fn fs_tab_complete(search: &str, nth: usize) -> Option<PathBuf> {
     let dir = std::fs::read_dir(&base_search);
 
     if let Ok(entries) = dir {
-        let entries = entries.filter(|e| e.is_ok()).map(|e| e.unwrap());
+        let entries = entries.filter(|e| e.is_ok()).flatten();
 
         for ent in entries {
             let mut ret_path = ent.path();

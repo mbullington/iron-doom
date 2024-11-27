@@ -9,6 +9,12 @@ pub struct Stopwatch {
     last: u128,
 }
 
+impl Default for Stopwatch {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Stopwatch {
     pub fn new() -> Self {
         let start = Instant::now();

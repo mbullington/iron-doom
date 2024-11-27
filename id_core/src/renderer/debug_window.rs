@@ -56,7 +56,7 @@ impl Window<UC> for DebugWindow {
             }
         }
 
-        return Ok(false);
+        Ok(false)
     }
 
     fn draw(

@@ -28,7 +28,7 @@ pub fn main_user_context(world: Rc<RefCell<World>>) -> impl UserContextSetup<Mai
         let ubo = GpuUniformBuffer::new(
             BufferUsages::UNIFORM,
             device,
-            Len(UBO::min_size().get()),
+            Len(Ubo::min_size().get()),
             Some("MainUserContext::ubo"),
         )?;
 
@@ -77,7 +77,7 @@ pub struct CameraInfo {
 }
 
 #[derive(ShaderType)]
-pub struct UBO {
+pub struct Ubo {
     camera_info: CameraInfo,
     cvars: CVarUniforms,
 }
@@ -87,7 +87,7 @@ pub struct MainUserContext {
 
     pub world: Rc<RefCell<World>>,
 
-    pub ubo: GpuUniformBuffer<UBO>,
+    pub ubo: GpuUniformBuffer<Ubo>,
 
     pub palette_colormap_data: PaletteColormapData,
     pub palette_image_data: PaletteImageData,
@@ -142,7 +142,7 @@ impl UserContext for MainUserContext {
         let ubo = &mut self.ubo;
         ubo.write(
             context.queue,
-            UBO {
+            Ubo {
                 camera_info,
                 cvars: CVarUniforms::from_cvars(&self.world.borrow().cvars),
             },

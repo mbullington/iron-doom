@@ -112,61 +112,61 @@ impl ToSystemEventExt for Event {
     fn to_system_event(&self, sdl_window: &Window) -> Option<SystemEvent> {
         match self {
             Event::KeyDown {
-                keycode, keymod, ..
+                keycode: Some(keycode),
+                keymod,
+                ..
             } => {
-                if let Some(keycode) = keycode {
-                    if let Some(keycode) = keycode.to_system_keycode() {
-                        // Check the modifiers
-                        use sdl2::keyboard::Mod;
-                        let alt = (*keymod & Mod::LALTMOD == Mod::LALTMOD)
-                            || (*keymod & Mod::RALTMOD == Mod::RALTMOD);
-                        let ctrl = (*keymod & Mod::LCTRLMOD == Mod::LCTRLMOD)
-                            || (*keymod & Mod::RCTRLMOD == Mod::RCTRLMOD);
-                        let shift = (*keymod & Mod::LSHIFTMOD == Mod::LSHIFTMOD)
-                            || (*keymod & Mod::RSHIFTMOD == Mod::RSHIFTMOD);
-                        let mac_cmd = *keymod & Mod::LGUIMOD == Mod::LGUIMOD;
-                        let command = (*keymod & Mod::LCTRLMOD == Mod::LCTRLMOD)
-                            || (*keymod & Mod::LGUIMOD == Mod::LGUIMOD);
+                if let Some(keycode) = keycode.to_system_keycode() {
+                    // Check the modifiers
+                    use sdl2::keyboard::Mod;
+                    let alt = (*keymod & Mod::LALTMOD == Mod::LALTMOD)
+                        || (*keymod & Mod::RALTMOD == Mod::RALTMOD);
+                    let ctrl = (*keymod & Mod::LCTRLMOD == Mod::LCTRLMOD)
+                        || (*keymod & Mod::RCTRLMOD == Mod::RCTRLMOD);
+                    let shift = (*keymod & Mod::LSHIFTMOD == Mod::LSHIFTMOD)
+                        || (*keymod & Mod::RSHIFTMOD == Mod::RSHIFTMOD);
+                    let mac_cmd = *keymod & Mod::LGUIMOD == Mod::LGUIMOD;
+                    let command = (*keymod & Mod::LCTRLMOD == Mod::LCTRLMOD)
+                        || (*keymod & Mod::LGUIMOD == Mod::LGUIMOD);
 
-                        let mods = SystemMod {
-                            alt,
-                            ctrl,
-                            shift,
-                            mac_cmd,
-                            command,
-                        };
+                    let mods = SystemMod {
+                        alt,
+                        ctrl,
+                        shift,
+                        mac_cmd,
+                        command,
+                    };
 
-                        return Some(SystemEvent::KeyDown { keycode, mods });
-                    }
+                    return Some(SystemEvent::KeyDown { keycode, mods });
                 }
             }
             Event::KeyUp {
-                keycode, keymod, ..
+                keycode: Some(keycode),
+                keymod,
+                ..
             } => {
-                if let Some(keycode) = keycode {
-                    if let Some(keycode) = keycode.to_system_keycode() {
-                        // Check the modifiers
-                        use sdl2::keyboard::Mod;
-                        let alt = (*keymod & Mod::LALTMOD == Mod::LALTMOD)
-                            || (*keymod & Mod::RALTMOD == Mod::RALTMOD);
-                        let ctrl = (*keymod & Mod::LCTRLMOD == Mod::LCTRLMOD)
-                            || (*keymod & Mod::RCTRLMOD == Mod::RCTRLMOD);
-                        let shift = (*keymod & Mod::LSHIFTMOD == Mod::LSHIFTMOD)
-                            || (*keymod & Mod::RSHIFTMOD == Mod::RSHIFTMOD);
-                        let mac_cmd = *keymod & Mod::LGUIMOD == Mod::LGUIMOD;
-                        let command = (*keymod & Mod::LCTRLMOD == Mod::LCTRLMOD)
-                            || (*keymod & Mod::LGUIMOD == Mod::LGUIMOD);
+                if let Some(keycode) = keycode.to_system_keycode() {
+                    // Check the modifiers
+                    use sdl2::keyboard::Mod;
+                    let alt = (*keymod & Mod::LALTMOD == Mod::LALTMOD)
+                        || (*keymod & Mod::RALTMOD == Mod::RALTMOD);
+                    let ctrl = (*keymod & Mod::LCTRLMOD == Mod::LCTRLMOD)
+                        || (*keymod & Mod::RCTRLMOD == Mod::RCTRLMOD);
+                    let shift = (*keymod & Mod::LSHIFTMOD == Mod::LSHIFTMOD)
+                        || (*keymod & Mod::RSHIFTMOD == Mod::RSHIFTMOD);
+                    let mac_cmd = *keymod & Mod::LGUIMOD == Mod::LGUIMOD;
+                    let command = (*keymod & Mod::LCTRLMOD == Mod::LCTRLMOD)
+                        || (*keymod & Mod::LGUIMOD == Mod::LGUIMOD);
 
-                        let mods = SystemMod {
-                            alt,
-                            ctrl,
-                            shift,
-                            mac_cmd,
-                            command,
-                        };
+                    let mods = SystemMod {
+                        alt,
+                        ctrl,
+                        shift,
+                        mac_cmd,
+                        command,
+                    };
 
-                        return Some(SystemEvent::KeyUp { keycode, mods });
-                    }
+                    return Some(SystemEvent::KeyUp { keycode, mods });
                 }
             }
             Event::MouseMotion {

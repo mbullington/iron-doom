@@ -14,10 +14,10 @@ impl Bounds2d {
     }
 
     pub fn from_iter<I: IntoIterator<Item = Bounds2d>>(iter: I) -> Self {
-        let mut min_x = std::f32::MAX;
-        let mut min_y = std::f32::MAX;
-        let mut max_x = std::f32::MIN;
-        let mut max_y = std::f32::MIN;
+        let mut min_x = f32::MAX;
+        let mut min_y = f32::MAX;
+        let mut max_x = f32::MIN;
+        let mut max_y = f32::MIN;
 
         for bounds in iter {
             min_x = min_x.min(bounds.min.x);

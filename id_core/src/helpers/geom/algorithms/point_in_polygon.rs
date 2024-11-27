@@ -37,33 +37,24 @@ pub fn point_in_polygon(point: &Vec2, polygon: &Polygon2d) -> bool {
         if v2 > 0.0 && v1 <= 0.0 {
             let f = (u1 * v2) - (u2 * v1);
             if f > 0.0 {
-                k = k + 1;
+                k += 1;
             } else if f == 0.0 {
                 return false;
             }
         } else if v1 > 0.0 && v2 <= 0.0 {
             let f = (u1 * v2) - (u2 * v1);
             if f < 0.0 {
-                k = k + 1;
+                k += 1;
             } else if f == 0.0 {
                 return false;
             }
-        } else if v2 == 0.0 && v1 < 0.0 {
-            let f = (u1 * v2) - (u2 * v1);
-            if f == 0.0 {
-                return false;
-            }
-        } else if v1 == 0.0 && v2 < 0.0 {
+        } else if (v2 == 0.0 && v1 < 0.0) || (v1 == 0.0 && v2 < 0.0) {
             let f = u1 * v2 - u2 * v1;
             if f == 0.0 {
                 return false;
             }
-        } else if v1 == 0.0 && v2 == 0.0 {
-            if u2 <= 0.0 && u1 >= 0.0 {
-                return false;
-            } else if u1 <= 0.0 && u2 >= 0.0 {
-                return false;
-            }
+        } else if v1 == 0.0 && v2 == 0.0 && ((u2 <= 0.0 && u1 >= 0.0) || (u1 <= 0.0 && u2 >= 0.0)) {
+            return false;
         }
         v1 = v2;
         u1 = u2;

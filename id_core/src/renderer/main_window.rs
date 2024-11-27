@@ -4,35 +4,18 @@ use wgpu::ShaderStages;
 use wgpu_pp::include_wgsl;
 
 use anyhow::Result;
-use encase::ShaderType;
-use ultraviolet::{Mat4, UVec2, Vec2, Vec3};
+use ultraviolet::UVec2;
 
-use crate::{
-    cvars::CVarUniforms,
-    renderer::helpers::{
-        gpu::{GpuFrameTexture, GpuFrameTextureDescriptor},
-        system::SystemEvent,
-        window::{Window, WindowContext, WindowSetup},
-    },
+use crate::renderer::helpers::{
+    gpu::{GpuFrameTexture, GpuFrameTextureDescriptor},
+    system::SystemEvent,
+    window::{Window, WindowContext, WindowSetup},
 };
 
 use super::{
     data::SectorData, helpers::movement_controller::MovementController,
     main_user_context::MainUserContext,
 };
-
-#[derive(ShaderType)]
-struct CameraInfo {
-    view_proj_mat: Mat4,
-    screen_size: Vec2,
-    camera_pos: Vec3,
-}
-
-#[derive(ShaderType)]
-struct UBO {
-    camera_info: CameraInfo,
-    cvars: CVarUniforms,
-}
 
 pub struct MainWindow {
     movement_controller: MovementController,
