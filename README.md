@@ -41,3 +41,4 @@ Code quality / bugs:
 Feature enhancements:
 - [ ] Add things (entities)
 - [ ] Add animated textures
+- [ ] Add web version
