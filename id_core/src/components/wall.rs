@@ -17,6 +17,8 @@ pub struct CWall {
     pub start_vert: Vec2,
     pub end_vert: Vec2,
 
+    pub flags: u32,
+
     pub sector_index: usize,
 
     pub x_offset: i16,

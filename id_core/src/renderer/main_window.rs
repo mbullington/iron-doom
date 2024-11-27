@@ -197,7 +197,7 @@ pub fn main_window() -> impl WindowSetup<UC> {
                     .bind_group_layout_entry(2, ShaderStages::FRAGMENT),
                 palette_image_data
                     .image_storage_buf
-                    .bind_group_layout_entry(3, ShaderStages::FRAGMENT),
+                    .bind_group_layout_entry(3, ShaderStages::all()),
                 sector_data
                     .sector_buf
                     .bind_group_layout_entry(4, ShaderStages::all()),

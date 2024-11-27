@@ -19,6 +19,8 @@ pub struct WallStorageData {
     pub start_vert: Vec2,
     pub end_vert: Vec2,
 
+    pub flags: u32,
+
     pub sector_index: u32,
     /// If the wall is one-sided, then this will be u32::MAX.
     /// Otherwise, this will be the back sector index.
@@ -65,6 +67,8 @@ impl WallData {
 
                 start_vert: c_wall.start_vert,
                 end_vert: c_wall.end_vert,
+
+                flags: c_wall.flags,
 
                 sector_index: *sector_data
                     .sector_index_by_index

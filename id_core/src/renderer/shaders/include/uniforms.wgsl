@@ -1,6 +1,12 @@
 #define GET_U8(array, u8_index) \
     ((array[(u8_index) / u32(4)] >> (((u8_index) % u32(4)) * u32(8))) & u32(0xFF))
 
+#define TRUE(u32_val) \
+    ((u32_val) > u32(0))
+
+#define FALSE(u32_val) \
+    ((u32_val) == u32(0))
+
 struct CameraInfo {
     view_proj_mat: mat4x4<f32>,
     screen_size: vec2<f32>,
@@ -28,6 +34,19 @@ struct WadSector {
     light_level: u32
 }
 
+const WALL_TYPE_UPPER = u32(0);
+const WALL_TYPE_MIDDLE = u32(1);
+const WALL_TYPE_LOWER = u32(2);
+
+const MAGIC_BACKSECTOR_INVALID = 0xFFFFFFFFu;
+
+const MAGIC_OFFSET_SKY = u32(8);
+const MAGIC_OFFSET_INVALID = u32(0);
+
+const FLAGS_TWOSIDED = u32(4);
+const FLAGS_UPPER_UNPEGGED = u32(8);
+const FLAGS_LOWER_UNPEGGED = u32(16);
+
 struct WadWall {
     // 0 == upper, 1 == middle, 2 == lower
     wall_type: u32,
@@ -35,8 +54,10 @@ struct WadWall {
     start_vert: vec2f,
     end_vert: vec2f,
 
-    sector_index: u32,
-    back_sector_index: u32,
+    flags: u32,
+
+    sector_idx: u32,
+    back_sector_idx: u32,
 
     palette_image_index: u32,
     

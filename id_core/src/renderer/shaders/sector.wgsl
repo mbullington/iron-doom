@@ -1,6 +1,5 @@
 #include "include/uniforms.wgsl"
-#include "include/utils.wgsl"
-#include "include/image.wgsl"
+#include "include/helpers.wgsl"
 #include "include/sky.wgsl"
 
 struct VsOutput {
@@ -14,6 +13,8 @@ struct VsOutput {
 fn vs_main(
     @location(0) coord: vec2f,
     @location(1) sector_idx: u32,
+    // We render the sector as a single mesh, instanced twice.
+    // The first time is for the floor, and the second time is for the ceiling.
     @builtin(instance_index) is_ceiling: u32,
 ) -> VsOutput {
     var height: f32 = 0.0;
@@ -35,11 +36,13 @@ fn fs_main(
     @location(1) sector_idx: u32,
     @location(2) is_ceiling: u32,
 ) -> @location(0) vec4f {
-    // If it's the second patch index, it's the sky.
-    if is_ceiling == u32(1) && sectors[sector_idx].ceiling_palette_image_index == u32(8) {
+    let sector = sectors[sector_idx];
+
+    // If the wall is a sky texture, we need to draw the sky instead.
+    if TRUE(is_ceiling) && sector.ceiling_palette_image_index == MAGIC_OFFSET_SKY {
         return draw_sky(position, world_pos);
     }
-    if is_ceiling == u32(0) && sectors[sector_idx].floor_palette_image_index == u32(8) {
+    if FALSE(is_ceiling) && sector.floor_palette_image_index == MAGIC_OFFSET_SKY {
         return draw_sky(position, world_pos);
     }
 
@@ -60,22 +63,14 @@ fn fs_main(
     var v_index = f32(v * 64.0);
 
     var palette_image_index = u32(0);
-    if is_ceiling > u32(0) {
-        palette_image_index = sectors[sector_idx].ceiling_palette_image_index;
+    if TRUE(is_ceiling) {
+        palette_image_index = sector.ceiling_palette_image_index;
     } else {
-        palette_image_index = sectors[sector_idx].floor_palette_image_index;
+        palette_image_index = sector.floor_palette_image_index;
     }
 
     var palette_index = sample_image(palette_image_index, u_index, v_index);
-    var light_index = u32(0);
-
-    if ubo.cvar_uniforms.r_fullbright != u32(1) {
-        // Adjust for light level.
-        light_index = u32(31) - (sectors[sector_idx].light_level >> u32(3));
-
-        // Adjust for depth. From eyeballing screenshots, it reduces by 1 every 8 units.
-        light_index = max(min(light_index + u32(depth / ubo.cvar_uniforms.r_lightfalloff), u32(31)), min(u32(6), light_index));
-    }
+    var light_index = get_light_index(sector.light_level, i32(0), depth);
 
     palette_index = GET_U8(colormap, light_index * u32(256) + palette_index);
     var color = palette[palette_index] / 255.0;

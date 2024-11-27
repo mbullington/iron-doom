@@ -1,19 +1,21 @@
 #include "include/uniforms.wgsl"
-#include "include/utils.wgsl"
-#include "include/image.wgsl"
+#include "include/helpers.wgsl"
 #include "include/sky.wgsl"
 
 struct VsOutput {
     @builtin(position) position: vec4f,
     @location(0) world_pos: vec3f,
-    @location(1) palette_image_index: u32,
-    @location(2) sector_idx: u32,
-    @location(3) uv: vec2f,
-    @location(4) width: f32,
-    @location(5) height: f32,
-    @location(6) x_offset: f32,
-    @location(7) y_offset: f32,
-    @location(8) light_offset: i32,
+    @location(1) wall_idx: u32,
+
+    @location(2) uv: vec2f,
+
+    @location(3) width: f32,
+    @location(4) height: f32,
+
+    @location(5) x_offset: f32,
+    @location(6) y_offset: f32,
+
+    @location(7) light_offset: i32,
 }
 
 @vertex
@@ -22,38 +24,57 @@ fn vs_main(
     @builtin(instance_index) instance_idx: u32,
 ) -> VsOutput {
     let wall = walls[instance_idx];
-    let sector = sectors[wall.sector_index];
+    let sector = sectors[wall.sector_idx];
 
     let start_vert = wall.start_vert;
     let end_vert = wall.end_vert;
     let vert_vec = end_vert - start_vert;
 
-    // coord goes from 0:0 to 1:1 on the x/y axis.
-
-    let is_upper = wall.wall_type == u32(0);
-    let is_lower = wall.wall_type == u32(2);
-
     var floor = sector.floor_height;
     var ceiling = sector.ceiling_height;
 
-    if !is_upper && !is_lower && wall.back_sector_index != 0xFFFFFFFFu {
-        let back_sector = sectors[wall.back_sector_index];
-        floor = max(sector.floor_height, back_sector.floor_height);
-        ceiling = min(sector.ceiling_height, back_sector.ceiling_height);
-    }
+    var x_offset = wall.x_offset;
+    var y_offset = wall.y_offset;
 
-    if is_upper {
-        let back_sector = sectors[wall.back_sector_index];
-        floor = back_sector.ceiling_height;
-        ceiling = sector.ceiling_height;
-    } else if is_lower {
-        let back_sector = sectors[wall.back_sector_index];
-        floor = sector.floor_height;
-        ceiling = back_sector.floor_height;
+    let is_upper = wall.wall_type == WALL_TYPE_UPPER;
+    let is_middle = wall.wall_type == WALL_TYPE_MIDDLE;
+    let is_lower = wall.wall_type == WALL_TYPE_LOWER;
+
+    let has_back_sector = wall.back_sector_idx != MAGIC_BACKSECTOR_INVALID;
+    if has_back_sector {
+        // This implements two-sided walls, with the option to be "unpegged" at
+        // either the top or the bottom.
+        //
+        // Reference:
+        // https://doomwiki.org/wiki/Texture_alignment
+        let back_sector = sectors[wall.back_sector_idx];
+        if is_middle {
+            floor = max(sector.floor_height, back_sector.floor_height);
+            ceiling = min(sector.ceiling_height, back_sector.ceiling_height);
+        } else if is_upper {
+            floor = back_sector.ceiling_height;
+            ceiling = sector.ceiling_height;
+        } else if is_lower {
+            floor = sector.floor_height;
+            ceiling = back_sector.floor_height;
+        }
+
+        if is_upper && FALSE(wall.flags & FLAGS_UPPER_UNPEGGED) {
+            y_offset += sector.ceiling_height - back_sector.ceiling_height;
+        }
+
+        if (is_middle || is_lower) && TRUE(wall.flags & FLAGS_LOWER_UNPEGGED) {
+            y_offset += max(sector.floor_height, back_sector.floor_height) - max(sector.ceiling_height, back_sector.ceiling_height);
+        }
     }
 
     let width = f32(sqrt(vert_vec.x * vert_vec.x + vert_vec.y * vert_vec.y));
     let height = ceiling - floor;
+
+    if (is_middle || is_lower) && TRUE(wall.flags & FLAGS_LOWER_UNPEGGED) {
+        let dims = get_image_width_height(wall.palette_image_index);
+        y_offset += mod2(f32(height), dims.y);
+    }
 
     let world_pos = vec3f(
         start_vert.x + vert_vec.x * coord.x,
@@ -62,6 +83,8 @@ fn vs_main(
     );
 
     var position = ubo.camera_info.view_proj_mat * vec4f(world_pos, 1.0);
+
+    // https://doomwiki.org/wiki/Fake_contrast
     var light_offset = i32(0);
     if abs(vert_vec.x) < 0.001 {
         light_offset = -2;
@@ -72,13 +95,12 @@ fn vs_main(
     return VsOutput(
         position,
         world_pos,
-        wall.palette_image_index,
-        wall.sector_index,
+        instance_idx,
         coord, // uv
         width,
         height,
-        wall.x_offset,
-        wall.y_offset,
+        x_offset,
+        y_offset,
         light_offset
     );
 }
@@ -87,41 +109,51 @@ fn vs_main(
 fn fs_main(
     @builtin(position) position: vec4f,
     @location(0) world_pos: vec3f,
-    @location(1) palette_image_index: u32,
-    @location(2) sector_idx: u32,
-    @location(3) uv: vec2f,
-    @location(4) width: f32,
-    @location(5) height: f32,
-    @location(6) x_offset: f32,
-    @location(7) y_offset: f32,
-    @location(8) light_offset: i32,
+    @location(1) wall_idx: u32,
+    @location(2) uv: vec2f,
+    @location(3) width: f32,
+    @location(4) height: f32,
+    @location(5) x_offset: f32,
+    @location(6) y_offset: f32,
+    @location(7) light_offset: i32,
 ) -> @location(0) vec4f {
-    if palette_image_index == u32(8) {
+    let wall = walls[wall_idx];
+    let sector = sectors[wall.sector_idx];
+
+    let has_back_sector = wall.back_sector_idx != MAGIC_BACKSECTOR_INVALID;
+
+    // If the wall is a sky texture, we need to draw the sky instead.
+    if wall.palette_image_index == MAGIC_OFFSET_SKY {
         return draw_sky(position, world_pos);
     }
 
     let depth = 0.1 / position.w + 16.0;
 
     // This is on the X/Z axis.
-    var world_u = f32(uv.x) * width + x_offset;
-    var world_v = f32(1.0 - uv.y) * height + y_offset;
-
-    var palette_index = sample_image(palette_image_index, world_u, world_v);
-    var light_index = u32(0);
-
-    if ubo.cvar_uniforms.r_fullbright != u32(1) {
-        // Adjust for light level.
-        light_index = u32(31) - (sectors[sector_idx].light_level >> u32(3));
-
-        // Adjust for depth. From eyeballing screenshots, it reduces by 1 every 8 units.
-        light_index = max(min(light_index + u32(depth / ubo.cvar_uniforms.r_lightfalloff), u32(31)), min(u32(6), light_index));
+    var world_u = f32(uv.x) * width;
+    var world_v = f32(1.0 - uv.y) * height;
+    if wall.wall_type == WALL_TYPE_MIDDLE && has_back_sector {
+        let dims = get_image_width_height(wall.palette_image_index);
+        // Determine if to peg to lower or upper texture.
+        if TRUE(wall.flags & FLAGS_LOWER_UNPEGGED) {
+            if world_v < f32(height - dims.y) {
+                discard;
+            }
+        } else {
+            if world_v > dims.y {
+                discard;
+            }
+        }
     }
 
-    // // Adjust for light offset.
-    light_index = u32(clamp(i32(light_index) + light_offset, i32(0), i32(31)));
+    world_u += x_offset;
+    world_v += y_offset;
+
+    var palette_index = sample_image(wall.palette_image_index, world_u, world_v);
+    let light_index = get_light_index(sector.light_level, light_offset, depth);
 
     palette_index = GET_U8(colormap, light_index * u32(256) + palette_index);
-    var color = palette[palette_index] / 256.0;
+    let color = palette[palette_index] / 255.0;
 
     return srgb_to_linear(vec4f(color, 1.0));
 }

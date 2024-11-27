@@ -82,6 +82,7 @@ fn _parse_wall(
             wall_type,
             start_vert,
             end_vert,
+            flags: linedef.flags as u32,
             sector_index: sidedef.sector_idx as usize,
             x_offset: sidedef.x_offset,
             y_offset: sidedef.y_offset,

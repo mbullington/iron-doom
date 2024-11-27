@@ -33,23 +33,13 @@ fn main() -> Result<(), String> {
         .map_err(|e| e.to_string())?;
 
     // Read IWAD.
-
-    let iwad = {
-        let mut file = File::open("/Users/michael/Projects/iron-doom/doom2.wad").unwrap();
-        let mut bytes = Vec::new();
-        file.read_to_end(&mut bytes).unwrap();
+    let wad = {
+        // let mut file = File::open("/Users/michael/Projects/iron-doom/doom2.wad").unwrap();
+        let mut bytes = include_bytes!("../../freedoom1.wad").to_vec();
         Wad::new(bytes).expect("Failed to parse IWAD")
     };
 
-    // let pwad = {
-    //     let mut file = File::open("/Users/michael/Projects/iron-doom/SOS_Boom.wad").unwrap();
-    //     let mut bytes = Vec::new();
-    //     file.read_to_end(&mut bytes).unwrap();
-    //     Wad::new(bytes).expect("Failed to parse IWAD")
-    // };
-
-    let wad = iwad; // .merge(pwad);
-    let world = World::new(wad, "MAP01").expect("Failed to create world");
+    let world = World::new(wad, "E1M1").expect("Failed to create world");
 
     println!("Merged WADs successfully");
 

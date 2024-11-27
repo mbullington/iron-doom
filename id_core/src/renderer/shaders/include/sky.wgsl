@@ -1,6 +1,5 @@
 #include "uniforms.wgsl"
-#include "image.wgsl"
-#include "utils.wgsl"
+#include "helpers.wgsl"
 
 #define PI (3.14159)
 
@@ -11,7 +10,7 @@ fn draw_sky(
     let delta = world_pos - ubo.camera_info.camera_pos;
 
     let palette_image_index = u32(8);
-    let dims = sample_image_width_height(palette_image_index);
+    let dims = get_image_width_height(palette_image_index);
 
     // Because we allow for mouse look, we need to fix delta.x and delta.z somehow.    
 
