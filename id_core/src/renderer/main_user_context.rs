@@ -106,28 +106,13 @@ impl UserContext for MainUserContext {
 
         // Update the camera info, view-projection matrix, and cvars.
         let world = self.world.clone();
-        let z_near = world
-            .borrow()
-            .cvars
-            .get("r_camera_znear")
-            .unwrap()
-            .value
-            .as_f32()
-            .unwrap();
-        let fov = world
-            .borrow()
-            .cvars
-            .get("r_camera_fov")
-            .unwrap()
-            .value
-            .as_f32()
-            .unwrap();
+        let cvars = CVarUniforms::from_cvars(&self.world.borrow().cvars);
 
         let camera_info = world.borrow_mut().with_player_pos(|player| {
             let camera = Camera {
                 movable: player,
-                z_near,
-                fov,
+                z_near: cvars.r_znear,
+                fov: cvars.r_fov,
             };
 
             let view_proj_mat =
@@ -142,13 +127,7 @@ impl UserContext for MainUserContext {
         })?;
 
         let ubo = &mut self.ubo;
-        ubo.write(
-            context.queue,
-            Ubo {
-                camera_info,
-                cvars: CVarUniforms::from_cvars(&self.world.borrow().cvars),
-            },
-        )?;
+        ubo.write(context.queue, Ubo { camera_info, cvars })?;
 
         Ok(())
     }

@@ -31,7 +31,8 @@ fn draw_sky(
 
     // Cylinder mapping.
     // From the center, the edges should encompass a 85deg FOV.
-    let cos_x = cos((-2.0 * norm_x - 1.0) * (PI * 42.5 / 180)) * 0.5;
+    let fov = ubo.cvar_uniforms.r_fov;
+    let cos_x = cos((-2.0 * norm_x - 1.0) * (PI * fov / 360)) * 0.5;
 
     let palette_image_index = u32(8);
     let dims = get_image_width_height(palette_image_index);

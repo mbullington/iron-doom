@@ -18,6 +18,9 @@ struct CVarUniforms {
     // WGSL doesn't support boolean types, so we use a u32 instead.
     r_fullbright: u32,
     r_lightfalloff: f32,
+    r_msaa: u32,
+    r_znear: f32,
+    r_fov: f32,
 }
 
 struct UBO {

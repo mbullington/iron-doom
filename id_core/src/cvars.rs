@@ -43,9 +43,17 @@ pub const DEFAULT_CVARS: &[(&str, CVar)] = &[
             value: CVarValue::F32(16.0),
         },
     ),
+    // Number of MSAA samples.
+    (
+        "r_msaa",
+        CVar {
+            description: "",
+            value: CVarValue::U32(4),
+        },
+    ),
     // Z near plane for the camera.
     (
-        "r_camera_znear",
+        "r_znear",
         CVar {
             description: "",
             value: CVarValue::F32(1.0),
@@ -53,7 +61,7 @@ pub const DEFAULT_CVARS: &[(&str, CVar)] = &[
     ),
     // FOV of the camera.
     (
-        "r_camera_fov",
+        "r_fov",
         CVar {
             description: "",
             value: CVarValue::F32(85.0),
@@ -70,6 +78,9 @@ pub struct CVarUniforms {
     /// WGSL doesn't support boolean types, so we use a u32 instead.
     pub r_fullbright: u32,
     pub r_lightfalloff: f32,
+    pub r_msaa: u32,
+    pub r_znear: f32,
+    pub r_fov: f32,
 }
 
 impl CVarUniforms {
@@ -77,6 +88,9 @@ impl CVarUniforms {
         Self {
             r_fullbright: cvars.get("r_fullbright").unwrap().value.as_bool().unwrap() as u32,
             r_lightfalloff: cvars.get("r_lightfalloff").unwrap().value.as_f32().unwrap(),
+            r_msaa: cvars.get("r_msaa").unwrap().value.as_u32().unwrap(),
+            r_znear: cvars.get("r_znear").unwrap().value.as_f32().unwrap(),
+            r_fov: cvars.get("r_fov").unwrap().value.as_f32().unwrap(),
         }
     }
 }
