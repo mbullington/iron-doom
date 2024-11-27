@@ -11,6 +11,7 @@ struct CameraInfo {
     view_proj_mat: mat4x4<f32>,
     screen_size: vec2<f32>,
     camera_pos: vec3<f32>,
+    rotation_rad: f32,
 }
 
 struct CVarUniforms {

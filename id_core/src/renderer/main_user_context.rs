@@ -74,6 +74,7 @@ pub struct CameraInfo {
     view_proj_mat: Mat4,
     screen_size: Vec2,
     camera_pos: Vec3,
+    rotation_rad: f32,
 }
 
 #[derive(ShaderType)]
@@ -136,6 +137,7 @@ impl UserContext for MainUserContext {
                 view_proj_mat,
                 screen_size: context.size.into(),
                 camera_pos: player.pos,
+                rotation_rad: player.yaw.to_radians(),
             }
         })?;
 
