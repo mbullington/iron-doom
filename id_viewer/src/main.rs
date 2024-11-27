@@ -2,8 +2,6 @@ extern crate pollster;
 extern crate sdl2;
 
 use std::cell::RefCell;
-use std::fs::File;
-use std::io::Read;
 use std::rc::Rc;
 use std::time::Duration;
 
@@ -35,7 +33,7 @@ fn main() -> Result<(), String> {
     // Read IWAD.
     let wad = {
         // let mut file = File::open("/Users/michael/Projects/iron-doom/doom2.wad").unwrap();
-        let mut bytes = include_bytes!("../../freedoom1.wad").to_vec();
+        let bytes = include_bytes!("../../freedoom1.wad").to_vec();
         Wad::new(bytes).expect("Failed to parse IWAD")
     };
 
