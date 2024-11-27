@@ -37,7 +37,6 @@ Soon this will be accessible via a Web interface.
 Code quality / bugs:
 - [ ] Make ECS for walls/sectors "real time."
 - [ ] Add support for mipmaps
-- [ ] Rewrite shaders with Slang?
 
 Feature enhancements:
 - [ ] Add things (entities)
