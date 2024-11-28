@@ -1,22 +1,16 @@
 #include "uniforms.wgsl"
 
-fn mod2i(x: i32, y: i32) -> i32 {
-    var x_mut = x;
-    
-    if x == 0 {
-        return i32(0);
-    }
-    if y == 0 {
-        return i32(0);
-    }
 
-    while x_mut >= y {
-        x_mut = x_mut - y;
-    }
-    while x_mut < 0 {
-        x_mut = y + x_mut;
-    }
-    return x_mut;
+fn mod2i(a: i32, b: i32) -> i32 {
+	var m = a % b;
+	if (m < 0) {
+		if (b < 0) {
+			m -= b;
+		} else {
+			m += b;
+		}
+	}
+	return m;
 }
 
 fn srgb_to_linear(
