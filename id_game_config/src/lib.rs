@@ -64,7 +64,7 @@ impl GameConfig {
         let config_str = match game {
             Game::Doom => include_str!("../config/doom.json"),
             Game::Heretic => include_str!("../config/heretic.json"),
-            Game::Chex => include_str!("../config/chex.json"),
+            Game::Chex => include_str!("../config/doom.json"),
         };
 
         serde_json::from_str(config_str)
