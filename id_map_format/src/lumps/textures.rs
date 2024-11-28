@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use indexmap::IndexMap;
 
 use crate::{helpers::parse_bytes_cstr, lump_from_namespace, Lump, LumpNamespace, Wad, WadError};
 
@@ -55,7 +55,7 @@ impl Wad {
         Ok(patch_names)
     }
 
-    pub fn parse_textures(&self) -> Result<HashMap<String, Texture>, WadError> {
+    pub fn parse_textures(&self) -> Result<IndexMap<String, Texture>, WadError> {
         // The point of the 1/2 distinction is just the shareware vs. full version of DOOM.
         //
         // Regardless, we want to parse them in the order they're presented in
@@ -74,7 +74,7 @@ impl Wad {
 
         let patch_names = self.parse_patch_names()?;
 
-        let mut textures: HashMap<String, Texture> = HashMap::new();
+        let mut textures: IndexMap<String, Texture> = IndexMap::new();
         for lump in lumps {
             let lump_bytes = lump.bytes();
             let is_priority = lump.name == "TEXTURE1";

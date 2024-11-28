@@ -52,17 +52,6 @@ impl GpuU8Buffer {
         self.gpu_buffer.write_vec(queue, u32_data)
     }
 
-    /// This is not unsafe per se, but this should be used sparingly to avoid
-    /// UB in the shader code itself.
-    pub unsafe fn write_to_offset(
-        &mut self,
-        queue: &wgpu::Queue,
-        data: &[u8],
-        offset: u64,
-    ) -> Result<()> {
-        self.gpu_buffer.write_to_offset(queue, data, offset)
-    }
-
     pub fn bind_group_layout_entry(
         &self,
         binding: u32,

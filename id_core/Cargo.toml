@@ -1,11 +1,12 @@
 [package]
-name = "id_core"
+name = "id-core"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
 
 [dependencies]
-id-map-format = { version = "0.1.0", path = "../id_map_format" }
+id-map-format = { path = "../id_map_format" }
+id-game-config = { path = "../id_game_config" }
 
 # core graphics
 wgpu = { version = "22.1.0" }
@@ -39,3 +40,4 @@ multimap = "0.10.0"
 regex = "1.11.0"
 lazy_static = "1.5.0"
 bitflags = "2.6.0"
+indexmap = "2.6.0"

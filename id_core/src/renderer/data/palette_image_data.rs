@@ -26,7 +26,7 @@ pub struct PaletteImageData {
 
 impl PaletteImageData {
     pub fn new(device: &wgpu::Device, world: &World) -> Result<Self> {
-        let textures = world.wad.parse_textures()?;
+        let textures = &world.textures;
 
         let mut image_storage_buf: Vec<u8> = Vec::new();
         let mut image_storage_by_index: HashMap<(CTexturePurpose, String), usize> = HashMap::new();
@@ -118,6 +118,10 @@ impl PaletteImageData {
         // Parse textures for floor flats.
         for (_id, texture) in &mut world.world.query::<&CTextureFloor>() {
             parse_texture(&texture.0.purpose, &texture.0.texture_name)?;
+        }
+        // Parse textures for animation states.
+        for (purpose, texture_name) in world.animations.keys() {
+            parse_texture(purpose, texture_name)?;
         }
 
         Ok(PaletteImageData {

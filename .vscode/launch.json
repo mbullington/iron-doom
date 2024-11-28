@@ -9,9 +9,9 @@
       "request": "launch",
       "name": "Debug executable 'iron-doom'",
       "cargo": {
-        "args": ["build", "--bin=id_viewer", "--package=id_viewer"],
+        "args": ["build", "--bin=id-viewer", "--package=id-viewer"],
         "filter": {
-          "name": "id_viewer",
+          "name": "id-viewer",
           "kind": "bin"
         }
       },

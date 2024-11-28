@@ -1,0 +1,11 @@
+[package]
+name = "id-game-config"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hex = "0.4.3"
+id-map-format = { path = "../id_map_format" }
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
+sha2 = "0.10.8"

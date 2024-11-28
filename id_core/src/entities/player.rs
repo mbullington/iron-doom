@@ -7,7 +7,7 @@ use ultraviolet::{Vec2, Vec3};
 
 use crate::{
     components::{CSector, CWorldPos},
-    world::SectorAccel,
+    SectorAccel,
 };
 
 pub fn init_player_entities(

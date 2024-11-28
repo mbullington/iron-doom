@@ -1,10 +1,10 @@
 [package]
-name = "id_viewer"
+name = "id-viewer"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-id_core = { version = "0.1.0", path = "../id_core" }
+id-core = { version = "0.1.0", path = "../id_core" }
 id-map-format = { version = "0.1.0", path = "../id_map_format" }
 
 sdl2 = { version = "0.37.0", features = ["raw-window-handle"] }

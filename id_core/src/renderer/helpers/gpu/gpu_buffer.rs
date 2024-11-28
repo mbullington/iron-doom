@@ -60,7 +60,7 @@ where
     }
 
     pub fn write(&mut self, queue: &wgpu::Queue, data: DataType) -> anyhow::Result<()> {
-        write_buf_encase(&mut self.vec, &self.buf, queue, data)
+        write_buf_encase(&mut self.vec, &self.buf, queue, data, 0)
     }
 
     pub fn new_vec(
@@ -86,22 +86,38 @@ where
     }
 
     pub fn write_vec(&mut self, queue: &wgpu::Queue, data: Vec<DataType>) -> Result<()> {
-        write_buf_encase(&mut self.vec, &self.buf, queue, &data)
+        if data.len() > self.size / self.stride {
+            return Err(anyhow::anyhow!(
+                "Data length {} is greater than buffer size {}",
+                data.len(),
+                self.size
+            ));
+        }
+
+        write_buf_encase(&mut self.vec, &self.buf, queue, &data, 0)
     }
 
-    /// This is not unsafe per se, but this should be used sparingly to avoid
-    /// UB in the shader code itself.
-    pub unsafe fn write_to_offset(
+    pub fn write_to_index_vec(
         &mut self,
         queue: &wgpu::Queue,
-        data: &[u8],
-        offset: u64,
+        data: DataType,
+        index: usize,
     ) -> Result<()> {
-        self.with_inner_buf(|buf| {
-            queue.write_buffer(buf, offset, data);
-        });
+        if index > self.size / self.stride {
+            return Err(anyhow::anyhow!(
+                "Index {} is greater than buffer size {}",
+                index,
+                self.size
+            ));
+        }
 
-        Ok(())
+        write_buf_encase(
+            &mut self.vec,
+            &self.buf,
+            queue,
+            &data,
+            (index * self.stride) as u64,
+        )
     }
 
     pub fn bind_group_layout_entry(
@@ -184,6 +200,7 @@ mod internal {
         buffer: &wgpu::Buffer,
         queue: &wgpu::Queue,
         data: DataType,
+        offset: u64,
     ) -> Result<()> {
         {
             let mut borrowed = vec.borrow_mut();
@@ -191,7 +208,7 @@ mod internal {
             data.write_into(&mut writer);
         }
 
-        queue.write_buffer(buffer, 0, &vec.borrow());
+        queue.write_buffer(buffer, offset, &vec.borrow());
         Ok(())
     }
 

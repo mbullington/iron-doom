@@ -1,0 +1,14 @@
+{
+  "walls": [
+    ["WLLWTFL1", "WLLWTFL3"],
+    ["WLLLVFL1", "WLLLVFL3"]
+  ],
+  "flats": [
+    ["FLTWAWA1", "FLTWAWA3"],
+    ["FLTSLUD1", "FLTSLUD3"],
+    ["FLTFLWW1", "FLTFLWW3"],
+    ["FLTTELE1", "FLTTELE4"],
+    ["FLTLAVA1", "FLTLAVA4"],
+    ["FLATHUH1", "FLATHUH4"]
+  ]
+}

@@ -2,21 +2,24 @@ use rayon::prelude::*;
 
 use std::collections::HashMap;
 
-use hecs::{CommandBuffer, EntityBuilder};
 use id_map_format::{Linedef, Map};
+
+use hecs::{CommandBuffer, EntityBuilder};
 use multimap::MultiMap;
 use ultraviolet::Vec2;
 
 use crate::{
     components::{
-        CSector, CTexture, CTextureFloor, CTexturePurpose, CTextureSky, CTextureSkyFloor,
+        CSector, CTexture, CTextureAnimated, CTextureFloor, CTexturePurpose, CTextureSky,
+        CTextureSkyFloor,
     },
     helpers::geom::{Graph2d, PolygonShape2d, Triangles2d},
+    AnimationStateMap,
 };
 
 use super::F_SKY1;
 
-pub fn init_sector_entities(world: &mut hecs::World, map: &Map) {
+pub fn init_sector_entities(world: &mut hecs::World, map: &Map, animations: &AnimationStateMap) {
     let mut sidedefs_by_sector: MultiMap<usize, usize> = MultiMap::new();
     for (i, sidedef) in map.sidedefs.iter().enumerate() {
         sidedefs_by_sector.insert(sidedef.sector_idx as usize, i);
@@ -116,6 +119,10 @@ pub fn init_sector_entities(world: &mut hecs::World, map: &Map) {
                         texture_name: sector.ceiling_flat.clone(),
                     });
                 }
+
+                if animations.contains_key(CTexturePurpose::Flat, &sector.ceiling_flat) {
+                    builder.add(CTextureAnimated {});
+                }
             }
 
             if sector.floor_flat != "-" {
@@ -126,6 +133,10 @@ pub fn init_sector_entities(world: &mut hecs::World, map: &Map) {
                         purpose: CTexturePurpose::Flat,
                         texture_name: sector.floor_flat.clone(),
                     }));
+                }
+
+                if animations.contains_key(CTexturePurpose::Flat, &sector.floor_flat) {
+                    builder.add(CTextureAnimated {});
                 }
             }
 

@@ -39,6 +39,7 @@ pub enum LumpNamespace {
 
 pub struct Wad {
     pub is_iwad: bool,
+    pub lump_names_in_order: Vec<String>,
 
     /// For more deterministic parsing, we parse the lumps into these namespaces.
     ///
@@ -137,9 +138,13 @@ impl Wad {
         let mut curr_namespace = LumpNamespace::Global;
         let mut map_iter_idx: i128 = 0;
 
+        let mut lump_names_in_order = Vec::new();
+
         let mut lump_namespaces: HashMap<LumpNamespace, HashMap<String, Lump>> = HashMap::new();
 
         for (i, lump) in lumps.iter().enumerate() {
+            lump_names_in_order.push(lump.name.clone());
+
             // Lookahead for the next lump's name—if it's THINGS, we're likely in a map.
             if i < lumps.len() - 1 && lumps[i + 1].name == "THINGS" {
                 curr_namespace = LumpNamespace::Map(lump.name.clone());
@@ -210,11 +215,15 @@ impl Wad {
 
         Ok(Self {
             is_iwad,
+            lump_names_in_order,
             lump_namespaces,
         })
     }
 
     pub fn merge(&self, other: Wad) -> Wad {
+        let mut lump_names_in_order = self.lump_names_in_order.clone();
+        lump_names_in_order.extend_from_slice(&other.lump_names_in_order);
+
         let mut lump_namespaces = self.lump_namespaces.clone();
         for (namespace, lump_map) in other.lump_namespaces {
             // If the namespace is a map, we always override the existing map.
@@ -237,6 +246,8 @@ impl Wad {
 
         Self {
             is_iwad: self.is_iwad || other.is_iwad,
+            // Merge the two lump names without deduplicating.
+            lump_names_in_order,
             lump_namespaces,
         }
     }
@@ -252,5 +263,18 @@ impl Wad {
             .collect();
 
         map_names
+    }
+
+    pub fn endoom_or_endtext(&self) -> Option<Vec<u8>> {
+        let endoom = lump_from_namespace(&LumpNamespace::Global, "ENDOOM", self);
+        let endtext = lump_from_namespace(&LumpNamespace::Global, "ENDTEXT", self);
+
+        match endoom {
+            Ok(lump) => Some(lump.bytes().to_vec()),
+            Err(_) => match endtext {
+                Ok(lump) => Some(lump.bytes().to_vec()),
+                Err(_) => None,
+            },
+        }
     }
 }
