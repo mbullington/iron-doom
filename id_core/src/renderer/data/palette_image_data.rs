@@ -148,9 +148,9 @@ impl PaletteImageData {
                     );
                     MAGIC_OFFSET_INVALID
                 }),
-            None => match world.world.query_one::<&CTextureSky>(id)?.get() {
-                Some(_) => MAGIC_OFFSET_SKY,
-                None => MAGIC_OFFSET_INVALID,
+            None => match world.world.satisfies::<&CTextureSky>(id)? {
+                true => MAGIC_OFFSET_SKY,
+                false => MAGIC_OFFSET_INVALID,
             },
         })
     }
@@ -168,9 +168,9 @@ impl PaletteImageData {
                     );
                     MAGIC_OFFSET_INVALID
                 }),
-            None => match world.world.query_one::<&CTextureSkyFloor>(id)?.get() {
-                Some(_) => MAGIC_OFFSET_SKY,
-                None => MAGIC_OFFSET_INVALID,
+            None => match world.world.satisfies::<&CTextureSkyFloor>(id)? {
+                true => MAGIC_OFFSET_SKY,
+                false => MAGIC_OFFSET_INVALID,
             },
         })
     }
