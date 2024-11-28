@@ -30,8 +30,8 @@ pub struct WallStorageData {
 
     pub palette_image_index: u32,
 
-    pub x_offset: f32,
-    pub y_offset: f32,
+    pub x_offset: i32,
+    pub y_offset: i32,
 }
 
 /// Walls are rendered totally instanced; we have a single quad that we render
@@ -168,7 +168,7 @@ fn _create_wall(
 
         palette_image_index: palette_image_data.lookup_texture(world, id)?,
 
-        x_offset: c_wall.x_offset as f32,
-        y_offset: c_wall.y_offset as f32,
+        x_offset: c_wall.x_offset as i32,
+        y_offset: c_wall.y_offset as i32,
     })
 }

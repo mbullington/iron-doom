@@ -37,7 +37,8 @@ Soon this will be accessible via a Web interface.
 Code quality / bugs:
 - [ ] Make ECS for walls/sectors "real time."
 - [ ] Add support for mipmaps
-- [ ] Reduce float precision issues
+- [ ] Scrolling walls
+- [ ] [Flickering, other effects, etc...](https://doomwiki.org/wiki/Lighting_effects#:~:text=The%20sector's%20light%20is%20the,used%20for%20the%20%22flash%22.)
 
 Feature enhancements:
 - [ ] Add things (entities)

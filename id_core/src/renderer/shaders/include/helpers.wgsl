@@ -1,19 +1,19 @@
 #include "uniforms.wgsl"
 
-fn mod2(x: f32, y: f32) -> f32 {
+fn mod2i(x: i32, y: i32) -> i32 {
     var x_mut = x;
     
-    if abs(x) < 0.0001 {
-        return 0.;
+    if x == 0 {
+        return i32(0);
     }
-    if abs(y) < 0.0001 {
-        return 0.;
+    if y == 0 {
+        return i32(0);
     }
 
     while x_mut >= y {
         x_mut = x_mut - y;
     }
-    while x_mut < 0.0001 {
+    while x_mut < 0 {
         x_mut = y + x_mut;
     }
     return x_mut;
@@ -31,14 +31,14 @@ fn srgb_to_linear(
     return linear;
 }
 
-fn get_image_width_height(idx: u32) -> vec2f {
+fn get_image_width_height(idx: u32) -> vec2u {
     let idx_dims = idx / u32(4);
     let width = images[idx_dims];
     let height = images[idx_dims + u32(1)];
-    return vec2f(f32(width), f32(height));
+    return vec2u(width, height);
 }
 
-fn sample_image(idx: u32, x: f32, y: f32) -> u32 {
+fn sample_image(idx: u32, x: i32, y: i32) -> u32 {
     let idx_dims = idx / u32(4);
     let width = images[idx_dims];
     let height = images[idx_dims + u32(1)];
@@ -47,8 +47,8 @@ fn sample_image(idx: u32, x: f32, y: f32) -> u32 {
         discard;
     }
 
-    let world_u = u32(mod2(x, f32(width)));
-    let world_v = u32(mod2(y, f32(height)));
+    let world_u = u32(mod2i(x, i32(width)));
+    let world_v = u32(mod2i(y, i32(height)));
 
     let idx_u8 = idx + u32(8) + u32(2) * (world_u * height + world_v);
 

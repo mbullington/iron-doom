@@ -35,10 +35,10 @@ fn draw_sky(
     let cos_x = cos((-2.0 * norm_x - 1.0) * (PI * fov / 360)) * 0.5;
 
     let palette_image_index = u32(8);
-    let dims = get_image_width_height(palette_image_index);
+    let dims = vec2f(get_image_width_height(palette_image_index));
 
-    let world_u = f32(dims.x * (rotation_rad / PI + cos_x));
-    let world_v = f32(dims.y * norm_y);
+    let world_u = i32(f32(dims.x) * (rotation_rad / PI + cos_x));
+    let world_v = i32(f32(dims.y) * norm_y);
 
     let palette_index = sample_image(palette_image_index, world_u, world_v);
     let color = palette[palette_index] / 256.0;

@@ -59,8 +59,8 @@ fn fs_main(
         v = 1.0 + v;
     }
 
-    var u_index = f32(u * 64.0);
-    var v_index = f32(v * 64.0);
+    var u_index = i32(u * 64.0);
+    var v_index = i32(v * 64.0);
 
     var palette_image_index = u32(0);
     if TRUE(is_ceiling) {

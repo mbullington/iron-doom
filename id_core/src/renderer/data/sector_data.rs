@@ -23,8 +23,8 @@ pub struct SectorVertexData {
 
 #[derive(ShaderType)]
 pub struct SectorStorageData {
-    pub floor_height: f32,
-    pub ceiling_height: f32,
+    pub floor_height: i32,
+    pub ceiling_height: i32,
 
     // Indexes in the flat array.
     pub ceiling_palette_image_index: u32,
@@ -89,8 +89,8 @@ impl SectorData {
             sector_index_by_entity.insert(id, sector_storage.len() as u32);
 
             sector_storage.push(SectorStorageData {
-                floor_height: c_sector.floor_height as f32,
-                ceiling_height: c_sector.ceiling_height as f32,
+                floor_height: c_sector.floor_height as i32,
+                ceiling_height: c_sector.ceiling_height as i32,
                 light_level: c_sector.light_level as u32,
 
                 ceiling_palette_image_index: palette_image_data.lookup_texture(world, id)?,
@@ -148,8 +148,8 @@ impl SectorData {
                 .ok_or(anyhow::anyhow!("Sector index not found."))?;
 
             let data = SectorStorageData {
-                floor_height: c_sector.floor_height as f32,
-                ceiling_height: c_sector.ceiling_height as f32,
+                floor_height: c_sector.floor_height as i32,
+                ceiling_height: c_sector.ceiling_height as i32,
                 light_level: c_sector.light_level as u32,
 
                 ceiling_palette_image_index: palette_image_data.lookup_texture(world, *id)?,

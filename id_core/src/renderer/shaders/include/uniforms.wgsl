@@ -29,8 +29,8 @@ struct UBO {
 }
 
 struct WadSector {
-    floor_height: f32,
-    ceiling_height: f32,
+    floor_height: i32,
+    ceiling_height: i32,
     // Indexes in the flat array.
     ceiling_palette_image_index: u32,
     floor_palette_image_index: u32,
@@ -65,8 +65,8 @@ struct WadWall {
 
     palette_image_index: u32,
     
-    x_offset: f32,
-    y_offset: f32
+    x_offset: i32,
+    y_offset: i32
 }
 
 struct PatchHeaderStorageData {

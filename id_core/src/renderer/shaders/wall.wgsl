@@ -9,11 +9,11 @@ struct VsOutput {
 
     @location(2) uv: vec2f,
 
-    @location(3) width: f32,
-    @location(4) height: f32,
+    @location(3) width: u32,
+    @location(4) height: u32,
 
-    @location(5) x_offset: f32,
-    @location(6) y_offset: f32,
+    @location(5) x_offset: i32,
+    @location(6) y_offset: i32,
 
     @location(7) light_offset: i32,
 }
@@ -68,17 +68,17 @@ fn vs_main(
         }
     }
 
-    let width = f32(sqrt(vert_vec.x * vert_vec.x + vert_vec.y * vert_vec.y));
-    let height = ceiling - floor;
+    let width = u32(ceil(sqrt(vert_vec.x * vert_vec.x + vert_vec.y * vert_vec.y)));
+    let height = u32(ceiling - floor);
 
     if (is_middle || is_lower) && TRUE(wall.flags & FLAGS_LOWER_UNPEGGED) {
         let dims = get_image_width_height(wall.palette_image_index);
-        y_offset += mod2(f32(height), dims.y);
+        y_offset += mod2i(i32(height), i32(dims.y));
     }
 
     let world_pos = vec3f(
         start_vert.x + vert_vec.x * coord.x,
-        f32(floor + (ceiling - floor) * coord.y),
+        f32(floor) + f32(ceiling - floor) * coord.y,
         start_vert.y + vert_vec.y * coord.x
     );
 
@@ -111,10 +111,10 @@ fn fs_main(
     @location(0) world_pos: vec3f,
     @location(1) wall_idx: u32,
     @location(2) uv: vec2f,
-    @location(3) width: f32,
-    @location(4) height: f32,
-    @location(5) x_offset: f32,
-    @location(6) y_offset: f32,
+    @location(3) width: u32,
+    @location(4) height: u32,
+    @location(5) x_offset: i32,
+    @location(6) y_offset: i32,
     @location(7) light_offset: i32,
 ) -> @location(0) vec4f {
     let wall = walls[wall_idx];
@@ -130,17 +130,18 @@ fn fs_main(
     let depth = 0.1 / position.w + 16.0;
 
     // This is on the X/Z axis.
-    var world_u = f32(uv.x) * width;
-    var world_v = f32(1.0 - uv.y) * height;
+    var world_u = i32(uv.x * f32(width));
+    var world_v = i32(f32(1.0 - uv.y) * f32(height));
+
     if wall.wall_type == WALL_TYPE_MIDDLE && has_back_sector {
         let dims = get_image_width_height(wall.palette_image_index);
         // Determine if to peg to lower or upper texture.
         if TRUE(wall.flags & FLAGS_LOWER_UNPEGGED) {
-            if world_v < f32(height - dims.y) {
+            if world_v < i32(height - dims.y) {
                 discard;
             }
         } else {
-            if world_v > dims.y {
+            if world_v > i32(dims.y) {
                 discard;
             }
         }
