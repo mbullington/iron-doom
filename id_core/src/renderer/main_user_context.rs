@@ -101,11 +101,25 @@ pub struct MainUserContext {
 
 impl UserContext for MainUserContext {
     fn think(&mut self, context: &UserContextContext, delta: Duration) -> Result<()> {
+        let world = self.world.clone();
+
+        // Start by letting the world think.
+        world.borrow_mut().think()?;
+
         // Update egui if necessary.
         self.egui_user_context.think(context, delta)?;
 
+        // Update sector & wall data.
+        self.sector_data
+            .think(context.queue, &world.borrow(), &self.palette_image_data)?;
+        self.wall_data.think(
+            context.queue,
+            &world.borrow(),
+            &self.sector_data,
+            &self.palette_image_data,
+        )?;
+
         // Update the camera info, view-projection matrix, and cvars.
-        let world = self.world.clone();
         let cvars = CVarUniforms::from_cvars(&self.world.borrow().cvars);
 
         let camera_info = world.borrow_mut().with_player_pos(|player| {
@@ -128,6 +142,9 @@ impl UserContext for MainUserContext {
 
         let ubo = &mut self.ubo;
         ubo.write(context.queue, Ubo { camera_info, cvars })?;
+
+        // End by letting the world think_end.
+        world.borrow_mut().think_end()?;
 
         Ok(())
     }

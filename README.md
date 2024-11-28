@@ -37,8 +37,8 @@ Soon this will be accessible via a Web interface.
 Code quality / bugs:
 - [ ] Make ECS for walls/sectors "real time."
 - [ ] Add support for mipmaps
+- [ ] Reduce float precision issues
 
 Feature enhancements:
 - [ ] Add things (entities)
-- [ ] Add animated textures
 - [ ] Add web version

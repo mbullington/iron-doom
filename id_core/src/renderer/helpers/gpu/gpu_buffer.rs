@@ -1,4 +1,4 @@
-use std::{cell::RefCell, marker::PhantomData};
+use std::marker::PhantomData;
 
 use anyhow::Result;
 use encase::{internal::WriteInto, ShaderSize, ShaderType};
@@ -12,12 +12,6 @@ use super::LenOrData;
 pub struct GpuBuffer<DataType: ShaderType + WriteInto + ShaderSize> {
     _phantom: PhantomData<DataType>,
     pub buf: Buffer,
-    /// Encase needs its own staging buffer, but it immediately gets passed off
-    /// to WGPU's staging buffer.
-    ///
-    /// So we do this battle where we initialize this once, and reuse it with
-    /// every write.
-    vec: RefCell<Vec<u8>>,
 
     pub usage: BufferUsages,
     pub stride: usize,
@@ -44,23 +38,18 @@ where
         label: Option<&'static str>,
     ) -> Result<Self> {
         let usage = usage | BufferUsages::COPY_DST;
-        let (buf, vec) = create_buf_encase(device, usage, len_or_data, label)?;
+        let buf = create_buf_encase(device, usage, len_or_data, label)?;
 
-        let stride = vec.len();
-        let size = vec.len();
+        let stride = buf.size() as usize;
+        let size = buf.size() as usize;
 
         Ok(GpuBuffer {
             _phantom: PhantomData,
             buf,
-            vec: RefCell::new(vec),
             usage,
             stride,
             size,
         })
-    }
-
-    pub fn write(&mut self, queue: &wgpu::Queue, data: DataType) -> anyhow::Result<()> {
-        write_buf_encase(&mut self.vec, &self.buf, queue, data, 0)
     }
 
     pub fn new_vec(
@@ -70,19 +59,22 @@ where
         label: Option<&'static str>,
     ) -> Result<Self> {
         let usage = usage | BufferUsages::COPY_DST;
-        let (buf, vec) = create_buf_encase(device, usage, LenOrData::Data(&data), label)?;
+        let buf = create_buf_encase(device, usage, LenOrData::Data(&data), label)?;
 
-        let stride = vec.len().checked_div(data.len()).unwrap_or(0);
-        let size = vec.len();
+        let stride = (buf.size() as usize).checked_div(data.len()).unwrap_or(0);
+        let size = buf.size() as usize;
 
         Ok(GpuBuffer {
             _phantom: PhantomData,
             buf,
-            vec: RefCell::new(vec),
             usage,
             stride,
             size,
         })
+    }
+
+    pub fn write(&mut self, queue: &wgpu::Queue, data: DataType) -> anyhow::Result<()> {
+        write_buf_encase(&self.buf, queue, data, 0)
     }
 
     pub fn write_vec(&mut self, queue: &wgpu::Queue, data: Vec<DataType>) -> Result<()> {
@@ -94,30 +86,24 @@ where
             ));
         }
 
-        write_buf_encase(&mut self.vec, &self.buf, queue, &data, 0)
+        write_buf_encase(&self.buf, queue, &data, 0)
     }
 
-    pub fn write_to_index_vec(
+    pub fn write_to_offset(
         &mut self,
         queue: &wgpu::Queue,
         data: DataType,
-        index: usize,
+        offset: usize,
     ) -> Result<()> {
-        if index > self.size / self.stride {
+        if offset > self.size {
             return Err(anyhow::anyhow!(
-                "Index {} is greater than buffer size {}",
-                index,
+                "Offset {} is greater than buffer size {}",
+                offset,
                 self.size
             ));
         }
 
-        write_buf_encase(
-            &mut self.vec,
-            &self.buf,
-            queue,
-            &data,
-            (index * self.stride) as u64,
-        )
+        write_buf_encase(&self.buf, queue, &data, offset as u64)
     }
 
     pub fn bind_group_layout_entry(
@@ -160,8 +146,6 @@ where
 }
 
 mod internal {
-    use std::cell::RefCell;
-
     use anyhow::Result;
     use encase::{
         internal::{WriteInto, Writer},
@@ -180,7 +164,7 @@ mod internal {
         usage: wgpu::BufferUsages,
         len_or_data: LenOrData<DataType>,
         label: Option<&'static str>,
-    ) -> Result<(wgpu::Buffer, Vec<u8>)> {
+    ) -> Result<wgpu::Buffer> {
         let len_or_mapped_data = match len_or_data {
             LenOrData::Len(len) => LenOrMappedData::Len(len),
             LenOrData::Data(data) => {
@@ -196,19 +180,23 @@ mod internal {
     }
 
     pub fn write_buf_encase<DataType: ShaderType + WriteInto>(
-        vec: &mut RefCell<Vec<u8>>,
         buffer: &wgpu::Buffer,
         queue: &wgpu::Queue,
         data: DataType,
         offset: u64,
     ) -> Result<()> {
-        {
-            let mut borrowed = vec.borrow_mut();
-            let mut writer: Writer<&mut Vec<u8>> = Writer::new(&data, borrowed.as_mut(), 0)?;
-            data.write_into(&mut writer);
-        }
+        let mut view =
+            queue
+                .write_buffer_with(buffer, offset, data.size())
+                .ok_or(anyhow::anyhow!(
+                    "Failed to write buffer with offset {} and size {}",
+                    offset,
+                    data.size()
+                ))?;
 
-        queue.write_buffer(buffer, offset, &vec.borrow());
+        let mut writer = Writer::new(&data, view.as_mut(), 0)?;
+        data.write_into(&mut writer);
+
         Ok(())
     }
 
@@ -217,7 +205,7 @@ mod internal {
         usage: wgpu::BufferUsages,
         len_or_mapped_data: LenOrMappedData,
         label: Option<&'static str>,
-    ) -> Result<(wgpu::Buffer, Vec<u8>)> {
+    ) -> Result<wgpu::Buffer> {
         match len_or_mapped_data {
             LenOrMappedData::Len(len) => {
                 let buffer = device.create_buffer(&wgpu::BufferDescriptor {
@@ -227,7 +215,7 @@ mod internal {
                     mapped_at_creation: false,
                 });
 
-                Ok((buffer, Vec::with_capacity(len as usize)))
+                Ok(buffer)
             }
 
             LenOrMappedData::MappedData(data) => {
@@ -247,7 +235,7 @@ mod internal {
                 buffer.slice(..).get_mapped_range_mut()[..size as usize].copy_from_slice(&data);
                 buffer.unmap();
 
-                Ok((buffer, data))
+                Ok(buffer)
             }
         }
     }

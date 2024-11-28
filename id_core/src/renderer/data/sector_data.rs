@@ -45,6 +45,7 @@ pub struct SectorData {
 
     /// This converts "sector_index" (from the wad) into the index of the sector buffer.
     pub sector_index_by_index: HashMap<usize, u32>,
+    pub sector_index_by_entity: HashMap<hecs::Entity, u32>,
 }
 
 impl SectorData {
@@ -59,6 +60,7 @@ impl SectorData {
         let mut sector_storage: Vec<SectorStorageData> = Vec::new();
 
         let mut sector_index_by_index: HashMap<usize, u32> = HashMap::new();
+        let mut sector_index_by_entity: HashMap<hecs::Entity, u32> = HashMap::new();
 
         for (id, c_sector) in &mut world.world.query::<&CSector>() {
             for triangle in &c_sector.triangles {
@@ -84,6 +86,7 @@ impl SectorData {
             }
 
             sector_index_by_index.insert(c_sector.sector_index, sector_storage.len() as u32);
+            sector_index_by_entity.insert(id, sector_storage.len() as u32);
 
             sector_storage.push(SectorStorageData {
                 floor_height: c_sector.floor_height as f32,
@@ -115,6 +118,52 @@ impl SectorData {
                 Some("SectorData::sector_buf"),
             )?,
             sector_index_by_index,
+            sector_index_by_entity,
         })
+    }
+
+    pub fn think(
+        &mut self,
+        queue: &wgpu::Queue,
+        world: &World,
+        palette_image_data: &PaletteImageData,
+    ) -> Result<()> {
+        // TODO: Right now we only update auxiliary information.
+        //
+        // We can't handle:
+        // - Changing the shape of the sector.
+        // - Removing a sector.
+        // - Adding a sector.
+
+        for id in world.changed_set.iter() {
+            if !world.world.satisfies::<&CSector>(*id)? {
+                continue;
+            }
+
+            let c_sector = world.world.get::<&CSector>(*id)?;
+
+            let sector_index = *self
+                .sector_index_by_entity
+                .get(id)
+                .ok_or(anyhow::anyhow!("Sector index not found."))?;
+
+            let data = SectorStorageData {
+                floor_height: c_sector.floor_height as f32,
+                ceiling_height: c_sector.ceiling_height as f32,
+                light_level: c_sector.light_level as u32,
+
+                ceiling_palette_image_index: palette_image_data.lookup_texture(world, *id)?,
+                floor_palette_image_index: palette_image_data.lookup_texture_floor(world, *id)?,
+            };
+
+            // Write the data to the buffer.
+            self.sector_buf.write_to_offset(
+                queue,
+                data,
+                sector_index as usize * self.sector_buf.stride,
+            )?;
+        }
+
+        Ok(())
     }
 }

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::Result;
 use encase::ShaderType;
 use ultraviolet::Vec2;
@@ -43,6 +45,8 @@ pub struct WallData {
 
     /// Stores middle, upper, and lower walls.
     pub wall_buf: GpuStorageBuffer<WallStorageData>,
+
+    pub wall_index_by_entity: HashMap<hecs::Entity, usize>,
 }
 
 impl WallData {
@@ -53,43 +57,12 @@ impl WallData {
         palette_image_data: &PaletteImageData,
     ) -> Result<Self> {
         let mut walls: Vec<WallStorageData> = Vec::new();
+        let mut wall_index_by_entity: HashMap<hecs::Entity, usize> = HashMap::new();
 
         for (id, c_wall) in &mut world.world.query::<&CWall>() {
-            // Check if wall is double-sided.
-            let back_sector_index = world
-                .world
-                .query_one::<&CWallTwoSided>(id)?
-                .get()
-                .map(|two_sided| two_sided.back_sector_index);
+            let wall = _create_wall(id, c_wall, world, sector_data, palette_image_data)?;
 
-            let wall = WallStorageData {
-                wall_type: c_wall.wall_type.bits(),
-
-                start_vert: c_wall.start_vert,
-                end_vert: c_wall.end_vert,
-
-                flags: c_wall.flags,
-
-                sector_index: *sector_data
-                    .sector_index_by_index
-                    .get(&c_wall.sector_index)
-                    .ok_or(anyhow::anyhow!("Sector index not found."))?,
-
-                back_sector_index: if let Some(idx) = back_sector_index {
-                    *sector_data
-                        .sector_index_by_index
-                        .get(&idx)
-                        .ok_or(anyhow::anyhow!("Back sector index not found."))?
-                } else {
-                    u32::MAX
-                },
-
-                palette_image_index: palette_image_data.lookup_texture(world, id)?,
-
-                x_offset: c_wall.x_offset as f32,
-                y_offset: c_wall.y_offset as f32,
-            };
-
+            wall_index_by_entity.insert(id, walls.len());
             walls.push(wall)
         }
 
@@ -114,6 +87,88 @@ impl WallData {
                 walls,
                 Some("WallData::wall_buf"),
             )?,
+
+            wall_index_by_entity,
         })
     }
+
+    pub fn think(
+        &mut self,
+        queue: &wgpu::Queue,
+        world: &World,
+        sector_data: &SectorData,
+        palette_image_data: &PaletteImageData,
+    ) -> Result<()> {
+        // TODO: Right now we only update auxiliary information.
+        //
+        // We can't handle:
+        // - Removing a wall.
+        // - Adding a wall.
+
+        for id in world.changed_set.iter() {
+            if !world.world.satisfies::<&CWall>(*id)? {
+                continue;
+            }
+
+            let c_wall = world.world.get::<&CWall>(*id)?;
+            let wall_index = *self
+                .wall_index_by_entity
+                .get(id)
+                .ok_or(anyhow::anyhow!("Wall index not found."))?;
+
+            let wall = _create_wall(*id, &c_wall, world, sector_data, palette_image_data)?;
+
+            // Write the data to the buffer.
+            self.wall_buf.write_to_offset(
+                queue,
+                wall,
+                wall_index as usize * self.wall_buf.stride,
+            )?;
+        }
+
+        Ok(())
+    }
+}
+
+fn _create_wall(
+    id: hecs::Entity,
+    c_wall: &CWall,
+    world: &World,
+    sector_data: &SectorData,
+    palette_image_data: &PaletteImageData,
+) -> Result<WallStorageData> {
+    // Check if wall is double-sided.
+    let back_sector_index = world
+        .world
+        .query_one::<&CWallTwoSided>(id)?
+        .get()
+        .map(|two_sided| two_sided.back_sector_index);
+
+    Ok(WallStorageData {
+        wall_type: c_wall.wall_type.bits(),
+
+        start_vert: c_wall.start_vert,
+        end_vert: c_wall.end_vert,
+
+        flags: c_wall.flags,
+
+        sector_index: *sector_data
+            .sector_index_by_index
+            .get(&c_wall.sector_index)
+            .ok_or(anyhow::anyhow!("Sector index not found."))?,
+
+        back_sector_index: if let Some(idx) = back_sector_index {
+            *sector_data
+                .sector_index_by_index
+                .get(&idx)
+                .ok_or(anyhow::anyhow!("Back sector index not found."))?
+        } else {
+            u32::MAX
+        },
+
+        palette_image_index: palette_image_data.lookup_texture(world, id)?,
+
+        x_offset: c_wall.x_offset as f32,
+        y_offset: c_wall.y_offset as f32,
+    })
 }

@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use id_game_config::GameConfig;
 use id_map_format::{Texture, Wad};
 
 use indexmap::IndexMap;
 
-use crate::components::CTexturePurpose;
+use crate::components::{CTexture, CTextureAnimated, CTextureFloor, CTexturePurpose};
 
 pub struct AnimationStateMap {
     states: HashMap<(CTexturePurpose, String), String>,
@@ -36,7 +36,7 @@ impl AnimationStateMap {
 
             if let (Some(start_idx), Some(end_idx)) = (start_idx, end_idx) {
                 // Create state transitions for every flat between start_idx and end_idx.
-                for i in start_idx..end_idx {
+                for i in start_idx..end_idx + 1 {
                     let start_name = &wad.lump_names_in_order[i];
                     let end_name =
                         &wad.lump_names_in_order[if i + 1 > end_idx { start_idx } else { i + 1 }];
@@ -63,7 +63,7 @@ impl AnimationStateMap {
 
             if let (Some(start_idx), Some(end_idx)) = (start_idx, end_idx) {
                 // Create state transitions for every wall between start_idx and end_idx.
-                for i in start_idx..end_idx {
+                for i in start_idx..end_idx + 1 {
                     let start_name = keys[i];
                     let end_name = keys[if i + 1 > end_idx { start_idx } else { i + 1 }];
 
@@ -93,5 +93,27 @@ impl AnimationStateMap {
 
     pub fn keys(&self) -> impl Iterator<Item = &(CTexturePurpose, String)> {
         self.states.keys()
+    }
+
+    pub fn animate_world(&self, changed_set: &mut HashSet<hecs::Entity>, world: &mut hecs::World) {
+        // Animate all textures.
+        for (id, (c_texture, _c_texture_anim)) in
+            world.query_mut::<(&mut CTexture, &CTextureAnimated)>()
+        {
+            if let Some(next) = self.get(c_texture.purpose, &c_texture.texture_name) {
+                c_texture.texture_name = next;
+                changed_set.insert(id);
+            }
+        }
+
+        // Animate all floor textures.
+        for (id, (c_texture, _c_texture_anim)) in
+            world.query_mut::<(&mut CTextureFloor, &CTextureAnimated)>()
+        {
+            if let Some(next) = self.get(c_texture.0.purpose, &c_texture.0.texture_name) {
+                c_texture.0.texture_name = next;
+                changed_set.insert(id);
+            }
+        }
     }
 }

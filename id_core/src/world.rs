@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use id_game_config::{Game, GameConfig};
 use id_map_format::{Texture, Wad};
 
@@ -23,9 +25,19 @@ pub struct World {
     pub world: hecs::World,
     pub player: hecs::Entity,
 
+    /// This tracks which entities have been modified since the last tick.
+    ///
+    /// Right now insertion is manual: there's different approaches, like Bevy's
+    /// use of DerefMut (with polling), or hecs' hashing system.
+    ///
+    /// Neither of these have the performance we want, so we're doing it manually.
+    pub changed_set: HashSet<hecs::Entity>,
+
     pub sector_accel: SectorAccel,
     pub animations: AnimationStateMap,
     pub cvars: CVarsMap,
+
+    frame_count_mod_20: u32,
 }
 
 impl World {
@@ -73,10 +85,31 @@ impl World {
             world,
             player,
 
+            changed_set: HashSet::new(),
+
             sector_accel,
             animations,
             cvars: DEFAULT_CVARS.iter().copied().collect::<CVarsMap>(),
+
+            frame_count_mod_20: 0,
         })
+    }
+
+    pub fn think(&mut self) -> Result<()> {
+        // Every 20 frames, animate the textures.
+        self.frame_count_mod_20 = (self.frame_count_mod_20 + 1) % 20;
+        if self.frame_count_mod_20 == 19 {
+            self.animations
+                .animate_world(&mut self.changed_set, &mut self.world);
+        }
+
+        Ok(())
+    }
+
+    pub fn think_end(&mut self) -> Result<()> {
+        // Clear the changed set.
+        self.changed_set.clear();
+        Ok(())
     }
 
     pub fn with_player_pos<RT, F: FnOnce(&mut CWorldPos) -> RT>(
