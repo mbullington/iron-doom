@@ -60,21 +60,18 @@ fn vs_main(
         }
 
         if is_upper && FALSE(wall.flags & FLAGS_UPPER_UNPEGGED) {
-            y_offset += sector.ceiling_height - back_sector.ceiling_height;
+            y_offset -= sector.ceiling_height - back_sector.ceiling_height;
         }
-
-        if (is_middle || is_lower) && TRUE(wall.flags & FLAGS_LOWER_UNPEGGED) {
-            y_offset += max(sector.floor_height, back_sector.floor_height) - max(sector.ceiling_height, back_sector.ceiling_height);
-        }
+    }
+    
+    if (is_middle || is_lower) && TRUE(wall.flags & FLAGS_LOWER_UNPEGGED) {
+        let height = u32(ceiling - floor);
+        let dims = get_image_width_height(wall.palette_image_index);
+        y_offset -= mod2i(i32(height), i32(dims.y));
     }
 
     let width = u32(ceil(sqrt(vert_vec.x * vert_vec.x + vert_vec.y * vert_vec.y)));
     let height = u32(ceiling - floor);
-
-    if (is_middle || is_lower) && TRUE(wall.flags & FLAGS_LOWER_UNPEGGED) {
-        let dims = get_image_width_height(wall.palette_image_index);
-        y_offset += mod2i(i32(height), i32(dims.y));
-    }
 
     let world_pos = vec3f(
         start_vert.x + vert_vec.x * coord.x,
