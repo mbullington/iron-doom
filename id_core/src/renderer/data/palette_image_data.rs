@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 
-use wgpu::BufferUsages;
-
 use anyhow::Result;
 use bytemuck::cast_slice;
 use lazy_static::lazy_static;
 use regex::Regex;
+use wgpu::BufferUsages;
 
-use id_map_format::{lump_from_namespace, LumpNamespace, Map, Patch};
+use id_map_format::{LumpNamespace, Map, Patch};
 
 use crate::{
     components::{CTexture, CTextureFloor, CTexturePurpose, CTextureSky, CTextureSkyFloor},
@@ -49,16 +48,16 @@ impl PaletteImageData {
 
             let mut palette_image = match purpose {
                 CTexturePurpose::Flat => {
-                    let lump = lump_from_namespace(&LumpNamespace::Flat, texture_name, &world.wad)?;
+                    world.with_lump(&LumpNamespace::Flat, texture_name, |lump| {
+                        // Fill the rest of the buffer with zeros, if it's not a multiple of 4096.
+                        let bytes = &mut lump.bytes().to_vec();
+                        if bytes.len() < 4096 {
+                            let remaining = 4096 - bytes.len();
+                            bytes.append(&mut vec![0u8; remaining]);
+                        }
 
-                    // Fill the rest of the buffer with zeros, if it's not a multiple of 4096.
-                    let bytes = &mut lump.bytes().to_vec();
-                    if bytes.len() < 4096 {
-                        let remaining = 4096 - bytes.len();
-                        bytes.append(&mut vec![0u8; remaining]);
-                    }
-
-                    PaletteImage::from_flat(bytes)
+                        PaletteImage::from_flat(bytes)
+                    })?
                 }
                 CTexturePurpose::Texture => {
                     let texture = match textures.get(&texture_name.to_uppercase()) {
@@ -72,13 +71,12 @@ impl PaletteImageData {
                     for entry in &texture.patch_entry {
                         let patch = match patches_by_name.get(&entry.patch_name) {
                             Some(patch) => patch,
-                            None => {
-                                let patch = world.wad.parse_patch(&entry.patch_name)?;
+                            None => world.with_patch(&entry.patch_name, |patch| {
                                 let patch_image = PaletteImage::from_patch(&patch);
 
                                 patches_by_name.insert(entry.patch_name.clone(), patch_image);
                                 &patches_by_name[&entry.patch_name]
-                            }
+                            })?,
                         };
 
                         palette_image.copy_from(
@@ -183,7 +181,7 @@ impl PaletteImageData {
 /// Represents a palette image.
 /// The image is stored in a column-major order.
 ///
-/// The overall size is 2*width*height.
+/// The overall size is `2*width*height`.
 /// - The first bit is the "valid bit", which denotes if it's transparent or not
 /// - The second bit is the palette color if valid, or garbage.
 struct PaletteImage {

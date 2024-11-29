@@ -1,8 +1,9 @@
 use id_game_config::{Game, GameConfig};
-use id_map_format::{Texture, Wad};
+use id_map_format::{lump_from_namespace, Lump, LumpNamespace, Patch, Texture, Wad};
 
 use anyhow::Result;
 use indexmap::IndexMap;
+use ultraviolet::Vec3;
 
 use crate::{
     components::CWorldPos,
@@ -13,17 +14,20 @@ use crate::{
 };
 
 pub struct World {
+    iwad: Wad,
+    pwad: Vec<Wad>,
+
     pub game: Game,
     pub game_config: GameConfig,
 
-    pub wad: Wad,
     pub map: id_map_format::Map,
+    pub palette: Vec<Vec3>,
+    pub colormap: Vec<u8>,
     pub textures: IndexMap<String, Texture>,
 
     /// Actual game state is maintained in the ECS "world".
     pub world: hecs::World,
     pub player: hecs::Entity,
-
     /// This tracks which entities have been modified since the last tick.
     ///
     /// Right now insertion is manual: there's different approaches, like Bevy's
@@ -40,21 +44,58 @@ pub struct World {
 }
 
 impl World {
-    pub fn new(wad: Wad, map_name: &str) -> Result<Self> {
-        let game = Game::from_wad(&wad).ok_or(anyhow::anyhow!(
+    pub fn new(iwad: Wad, pwad: Vec<Wad>, map_name: &str) -> Result<Self> {
+        let game = Game::from_wad(&iwad).ok_or(anyhow::anyhow!(
             "Game detection failed: is this DOOM/DOOM2/Heretic?"
         ))?;
         let game_config = GameConfig::from_game(game)?;
 
-        let map = wad.parse_map(map_name)?;
-        let textures = wad.parse_textures()?;
+        // If the map is in the PWAD, use that.
+        let map = pwad
+            .iter()
+            .rev()
+            .find_map(|pwad| pwad.parse_map(map_name).ok())
+            .unwrap_or_else(|| iwad.parse_map(map_name).unwrap());
+
+        // If the palette is in the PWAD, use that.
+        let palette = pwad
+            .iter()
+            .rev()
+            .find_map(|pwad| pwad.parse_palettes().ok())
+            .unwrap_or_else(|| iwad.parse_palettes().unwrap())[0]
+            .iter()
+            .map(|(r, g, b)| Vec3::new(*r as f32, *g as f32, *b as f32))
+            .collect::<Vec<Vec3>>();
+
+        // If the colormap is in the PWAD, use that.
+        let colormap = pwad
+            .iter()
+            .rev()
+            .find_map(|pwad| pwad.parse_colormaps().ok())
+            .unwrap_or_else(|| iwad.parse_colormaps().unwrap());
+
+        let textures = {
+            let mut textures = IndexMap::new();
+
+            let mut patch_names = iwad.parse_patch_names()?;
+            textures.extend(iwad.parse_textures(&patch_names)?);
+
+            // For each PWAD, add the textures.
+            for pwad in pwad.iter() {
+                // Just overwrite the patch names, since they're the same.
+                patch_names = pwad.parse_patch_names()?;
+                textures.extend(pwad.parse_textures(&patch_names)?);
+            }
+
+            textures
+        };
 
         let mut world = hecs::World::new();
 
         // Time how long it takes to spawn the entities.
         let mut stopwatch = Stopwatch::new();
 
-        let animations = AnimationStateMap::from_game_config(&game_config, &wad, &textures);
+        let animations = AnimationStateMap::from_game_config(&game_config, &iwad, &textures);
 
         // Add walls to the world.
         init_wall_entities(&mut world, &map, &animations);
@@ -74,16 +115,19 @@ impl World {
         println!("Setup time: {:?}", setup_time);
 
         Ok(Self {
+            iwad,
+            pwad,
+
             game,
             game_config,
 
-            wad,
             map,
+            palette,
+            colormap,
             textures,
 
             world,
             player,
-
             changed_set: ChangedSet::default(),
 
             sector_accel,
@@ -117,5 +161,44 @@ impl World {
     ) -> Result<RT> {
         let player_pos = self.world.query_one_mut::<&mut CWorldPos>(self.player)?;
         Ok(callback(player_pos))
+    }
+
+    pub fn with_lump<RT, F: FnOnce(&Lump) -> RT>(
+        &self,
+        namespace: &LumpNamespace,
+        lump_name: &str,
+        callback: F,
+    ) -> Result<RT> {
+        // If the map is in the PWAD, use that.
+        for pwad in self.pwad.iter().rev() {
+            if let Ok(lump) = lump_from_namespace(namespace, lump_name, pwad) {
+                return Ok(callback(lump));
+            }
+        }
+
+        if let Ok(lump) = lump_from_namespace(namespace, lump_name, &self.iwad) {
+            return Ok(callback(lump));
+        }
+
+        Err(anyhow::anyhow!("Lump not found: {}", lump_name))
+    }
+
+    pub fn with_patch<RT, F: FnOnce(Patch) -> RT>(
+        &self,
+        patch_name: &str,
+        callback: F,
+    ) -> Result<RT> {
+        // If the map is in the PWAD, use that.
+        for pwad in self.pwad.iter().rev() {
+            if let Ok(patch) = pwad.parse_patch(patch_name) {
+                return Ok(callback(patch));
+            }
+        }
+
+        if let Ok(patch) = self.iwad.parse_patch(patch_name) {
+            return Ok(callback(patch));
+        }
+
+        Err(anyhow::anyhow!("Patch not found: {}", patch_name))
     }
 }

@@ -1,9 +1,11 @@
 use anyhow::Result;
-use id_map_format::Wad;
 use ultraviolet::Vec3;
 use wgpu::BufferUsages;
 
-use crate::renderer::helpers::gpu::{GpuStorageBuffer, GpuU8StorageBuffer};
+use crate::{
+    renderer::helpers::gpu::{GpuStorageBuffer, GpuU8StorageBuffer},
+    world::World,
+};
 
 pub struct PaletteColormapData {
     pub palette_storage_buf: GpuStorageBuffer<Vec3>,
@@ -11,25 +13,18 @@ pub struct PaletteColormapData {
 }
 
 impl PaletteColormapData {
-    pub fn new(device: &wgpu::Device, wad: &Wad) -> Result<Self> {
-        let palette = wad.parse_palettes()?[0]
-            .iter()
-            .map(|(r, g, b)| Vec3::new(*r as f32, *g as f32, *b as f32))
-            .collect::<Vec<Vec3>>();
-
-        let colormap = wad.parse_colormaps()?;
-
+    pub fn new(device: &wgpu::Device, world: &World) -> Result<Self> {
         Ok(Self {
             palette_storage_buf: GpuStorageBuffer::new_vec(
                 BufferUsages::STORAGE,
                 device,
-                palette,
+                world.palette.clone(),
                 None,
             )?,
             colormap_storage_buf: GpuU8StorageBuffer::new_vec(
                 BufferUsages::STORAGE,
                 device,
-                colormap,
+                world.colormap.clone(),
                 None,
             )?,
         })

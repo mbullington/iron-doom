@@ -220,38 +220,6 @@ impl Wad {
         })
     }
 
-    pub fn merge(&self, other: Wad) -> Wad {
-        let mut lump_names_in_order = self.lump_names_in_order.clone();
-        lump_names_in_order.extend_from_slice(&other.lump_names_in_order);
-
-        let mut lump_namespaces = self.lump_namespaces.clone();
-        for (namespace, lump_map) in other.lump_namespaces {
-            // If the namespace is a map, we always override the existing map.
-            if let LumpNamespace::Map(_) = namespace {
-                lump_namespaces.insert(namespace, lump_map);
-                continue;
-            }
-
-            match lump_namespaces.get_mut(&namespace) {
-                Some(existing_lump_map) => {
-                    for (lump_name, lump) in lump_map {
-                        existing_lump_map.insert(lump_name, lump);
-                    }
-                }
-                None => {
-                    lump_namespaces.insert(namespace, lump_map);
-                }
-            }
-        }
-
-        Self {
-            is_iwad: self.is_iwad || other.is_iwad,
-            // Merge the two lump names without deduplicating.
-            lump_names_in_order,
-            lump_namespaces,
-        }
-    }
-
     pub fn map_names(&self) -> Vec<String> {
         let map_names: Vec<String> = self
             .lump_namespaces

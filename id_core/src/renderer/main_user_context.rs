@@ -39,7 +39,7 @@ pub fn main_user_context(world: Rc<RefCell<World>>) -> impl UserContextSetup<Mai
         let (palette_colormap_data, palette_image_data, sector_data, wall_data) = {
             let world = world.borrow();
 
-            let palette_colormap_data = PaletteColormapData::new(device, &world.wad)?;
+            let palette_colormap_data = PaletteColormapData::new(device, &world)?;
             let palette_image_data = PaletteImageData::new(device, queue, &world)?;
 
             let sector_data = SectorData::new(device, queue, &world, &palette_image_data)?;

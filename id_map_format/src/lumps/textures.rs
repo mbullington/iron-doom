@@ -24,7 +24,7 @@ pub struct Texture {
 }
 
 impl Wad {
-    fn parse_patch_names(&self) -> Result<Vec<String>, WadError> {
+    pub fn parse_patch_names(&self) -> Result<Vec<String>, WadError> {
         let lump = lump_from_namespace(&LumpNamespace::Global, "PNAMES", self)?;
         let lump_bytes = lump.bytes();
 
@@ -55,7 +55,10 @@ impl Wad {
         Ok(patch_names)
     }
 
-    pub fn parse_textures(&self) -> Result<IndexMap<String, Texture>, WadError> {
+    pub fn parse_textures(
+        &self,
+        patch_names: &[String],
+    ) -> Result<IndexMap<String, Texture>, WadError> {
         // The point of the 1/2 distinction is just the shareware vs. full version of DOOM.
         //
         // Regardless, we want to parse them in the order they're presented in
@@ -71,8 +74,6 @@ impl Wad {
         if lumps.is_empty() {
             return Err(WadError::MissingLump("TEXTURE1".to_string()));
         }
-
-        let patch_names = self.parse_patch_names()?;
 
         let mut textures: IndexMap<String, Texture> = IndexMap::new();
         for lump in lumps {
