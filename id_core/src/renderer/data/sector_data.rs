@@ -1,5 +1,10 @@
 use std::collections::HashMap;
 
+use meshopt::{
+    generate_vertex_remap, optimize_vertex_cache_in_place, optimize_vertex_fetch_in_place,
+    remap_index_buffer, remap_vertex_buffer,
+};
+
 use anyhow::Result;
 use encase::ShaderType;
 use offset_allocator::{Allocation, Allocator};
@@ -15,7 +20,7 @@ use crate::{
 use super::{limits::SECTOR_DATA_SIZE, PaletteImageData};
 
 #[repr(C)]
-#[derive(ShaderType)]
+#[derive(ShaderType, Clone, Default)]
 pub struct SectorVertexData {
     pub position: Vec2,
     /// This is the index in the sector storage buffer.
@@ -166,8 +171,7 @@ impl SectorData {
                 .ok_or(anyhow::anyhow!("Sector index not found."))?
                 .offset as usize;
 
-            self.sector_alloc
-                .free(self.sector_alloc_by_entity[id].clone());
+            self.sector_alloc.free(self.sector_alloc_by_entity[id]);
 
             self.sector_alloc_by_entity.remove(id);
             self.sector_alloc_by_index.remove(&sector_index);
@@ -275,6 +279,15 @@ fn _create_mesh(
             );
         }
     }
+
+    // Use meshoptimizer.
+    let (vertex_count, remap) = generate_vertex_remap(&sector_vertices, Some(&sector_indices));
+
+    let mut sector_vertices = remap_vertex_buffer(&sector_vertices, vertex_count, &remap);
+    let mut sector_indices = remap_index_buffer(Some(&sector_indices), vertex_count, &remap);
+
+    optimize_vertex_cache_in_place(&mut sector_indices, vertex_count);
+    optimize_vertex_fetch_in_place(&mut sector_indices, &mut sector_vertices);
 
     Ok((sector_vertices, sector_indices))
 }
