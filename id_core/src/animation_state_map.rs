@@ -100,7 +100,11 @@ impl AnimationStateMap {
         self.states.keys()
     }
 
-    pub fn animate_world(&self, changed_set: &mut ChangedSet, world: &mut hecs::World) {
+    pub fn animate_world(
+        &self,
+        changed_set: &mut ChangedSet<hecs::Entity>,
+        world: &mut hecs::World,
+    ) {
         // Animate all textures.
         for (id, (c_texture, _c_texture_anim)) in
             world.query_mut::<(&mut CTexture, &CTextureAnimated)>()

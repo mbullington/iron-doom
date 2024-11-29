@@ -1,40 +1,49 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, hash::Hash};
 
-#[derive(Default)]
-pub struct ChangedSet {
-    _spawned: HashSet<hecs::Entity>,
-    _changed: HashSet<hecs::Entity>,
-    _removed: HashSet<hecs::Entity>,
+pub struct ChangedSet<T: Eq + Hash> {
+    _spawned: HashSet<T>,
+    _changed: HashSet<T>,
+    _removed: HashSet<T>,
 }
 
-impl ChangedSet {
+impl<T: Eq + Hash> Default for ChangedSet<T> {
+    fn default() -> Self {
+        Self {
+            _spawned: HashSet::new(),
+            _changed: HashSet::new(),
+            _removed: HashSet::new(),
+        }
+    }
+}
+
+impl<T: Eq + Hash> ChangedSet<T> {
     pub fn clear(&mut self) {
         self._spawned.clear();
         self._changed.clear();
         self._removed.clear();
     }
 
-    pub fn spawn(&mut self, entity: hecs::Entity) {
+    pub fn spawn(&mut self, entity: T) {
         self._spawned.insert(entity);
     }
 
-    pub fn spawned(&self) -> &HashSet<hecs::Entity> {
+    pub fn spawned(&self) -> &HashSet<T> {
         &self._spawned
     }
 
-    pub fn change(&mut self, entity: hecs::Entity) {
+    pub fn change(&mut self, entity: T) {
         self._changed.insert(entity);
     }
 
-    pub fn changed(&self) -> &HashSet<hecs::Entity> {
+    pub fn changed(&self) -> &HashSet<T> {
         &self._changed
     }
 
-    pub fn remove(&mut self, entity: hecs::Entity) {
+    pub fn remove(&mut self, entity: T) {
         self._removed.insert(entity);
     }
 
-    pub fn removed(&self) -> &HashSet<hecs::Entity> {
+    pub fn removed(&self) -> &HashSet<T> {
         &self._removed
     }
 }

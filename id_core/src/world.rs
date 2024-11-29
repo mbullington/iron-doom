@@ -34,7 +34,7 @@ pub struct World {
     /// use of DerefMut (with polling), or hecs' hashing system.
     ///
     /// Neither of these have the performance we want, so we're doing it manually.
-    pub changed_set: ChangedSet,
+    pub changed_set: ChangedSet<hecs::Entity>,
 
     pub sector_accel: SectorAccel,
     pub animations: AnimationStateMap,
@@ -128,7 +128,7 @@ impl World {
 
             world,
             player,
-            changed_set: ChangedSet::default(),
+            changed_set: ChangedSet::<hecs::Entity>::default(),
 
             sector_accel,
             animations,
