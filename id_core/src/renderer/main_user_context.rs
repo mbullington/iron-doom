@@ -112,8 +112,12 @@ impl UserContext for MainUserContext {
         self.egui_user_context.think(context, delta)?;
 
         // Update sector & wall data.
-        self.sector_data
-            .think(context.queue, &world.borrow(), &self.palette_image_data)?;
+        self.sector_data.think(
+            context.device,
+            context.queue,
+            &world.borrow(),
+            &self.palette_image_data,
+        )?;
         self.wall_data.think(
             context.queue,
             &world.borrow(),

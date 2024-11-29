@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use encase::ShaderType;
+use offset_allocator::{Allocation, Allocator};
 use ultraviolet::Vec2;
 use wgpu::BufferUsages;
 
@@ -46,7 +47,10 @@ pub struct WallData {
     /// Stores middle, upper, and lower walls.
     pub wall_buf: GpuStorageBuffer<WallStorageData>,
 
-    pub wall_index_by_entity: HashMap<hecs::Entity, usize>,
+    pub highest_wall_index: u32,
+
+    wall_alloc: Allocator,
+    wall_alloc_by_entity: HashMap<hecs::Entity, Allocation>,
 }
 
 impl WallData {
@@ -58,12 +62,24 @@ impl WallData {
         palette_image_data: &PaletteImageData,
     ) -> Result<Self> {
         let mut walls: Vec<WallStorageData> = Vec::new();
-        let mut wall_index_by_entity: HashMap<hecs::Entity, usize> = HashMap::new();
+
+        let mut highest_wall_index: u32 = 0;
+
+        let mut wall_alloc = Allocator::new(WALL_DATA_SIZE as u32);
+        let mut wall_alloc_by_entity: HashMap<hecs::Entity, Allocation> = HashMap::new();
 
         for (id, c_wall) in &mut world.world.query::<&CWall>() {
             let wall = _create_wall(id, c_wall, world, sector_data, palette_image_data)?;
+            let alloc = wall_alloc
+                .allocate(1)
+                .ok_or(anyhow::anyhow!("Wall allocation failed, out of space!"))?;
 
-            wall_index_by_entity.insert(id, walls.len());
+            // Ensure "push" is correct.
+            assert!(alloc.offset == walls.len() as u32);
+
+            wall_alloc_by_entity.insert(id, alloc);
+            highest_wall_index = highest_wall_index.max(alloc.offset);
+
             walls.push(wall)
         }
 
@@ -91,7 +107,10 @@ impl WallData {
             // Resize so we can add more walls later.
             .resize(device, queue, WALL_DATA_SIZE)?,
 
-            wall_index_by_entity,
+            highest_wall_index,
+
+            wall_alloc,
+            wall_alloc_by_entity,
         })
     }
 
@@ -102,20 +121,15 @@ impl WallData {
         sector_data: &SectorData,
         palette_image_data: &PaletteImageData,
     ) -> Result<()> {
-        // TODO: Right now we only update auxiliary information.
-        //
-        // We can't handle:
-        // - Removing a wall.
-        // - Adding a wall.
-
+        // First handle changed, which will update the data.
         for id in world.changed_set.changed() {
             if !world.world.satisfies::<&CWall>(*id)? {
                 continue;
             }
 
             let c_wall = world.world.get::<&CWall>(*id)?;
-            let wall_index = *self
-                .wall_index_by_entity
+            let alloc = *self
+                .wall_alloc_by_entity
                 .get(id)
                 .ok_or(anyhow::anyhow!("Wall index not found."))?;
 
@@ -125,7 +139,45 @@ impl WallData {
             self.wall_buf.write_to_offset(
                 queue,
                 wall,
-                wall_index as usize * self.wall_buf.stride,
+                alloc.offset as usize * self.wall_buf.stride,
+            )?;
+        }
+
+        // Next handle removed, so the allocator can free up space.
+        for id in world.changed_set.removed() {
+            if !world.world.satisfies::<&CWall>(*id)? {
+                continue;
+            }
+
+            let alloc = *self
+                .wall_alloc_by_entity
+                .get(id)
+                .ok_or(anyhow::anyhow!("Wall index not found."))?;
+
+            self.wall_alloc.free(alloc);
+        }
+
+        // Lastly handle spawned, which will add new walls.
+        for id in world.changed_set.spawned() {
+            if !world.world.satisfies::<&CWall>(*id)? {
+                continue;
+            }
+
+            let c_wall = world.world.get::<&CWall>(*id)?;
+            let wall = _create_wall(*id, &c_wall, world, sector_data, palette_image_data)?;
+            let alloc = self
+                .wall_alloc
+                .allocate(1)
+                .ok_or(anyhow::anyhow!("Wall allocation failed, out of space!"))?;
+
+            self.wall_alloc_by_entity.insert(*id, alloc);
+            self.highest_wall_index = self.highest_wall_index.max(alloc.offset);
+
+            // Write the data to the buffer.
+            self.wall_buf.write_to_offset(
+                queue,
+                wall,
+                alloc.offset as usize * self.wall_buf.stride,
             )?;
         }
 
@@ -155,16 +207,18 @@ fn _create_wall(
 
         flags: c_wall.flags,
 
-        sector_index: *sector_data
-            .sector_index_by_index
+        sector_index: sector_data
+            .sector_alloc_by_index
             .get(&c_wall.sector_index)
-            .ok_or(anyhow::anyhow!("Sector index not found."))?,
+            .ok_or(anyhow::anyhow!("Sector index not found."))?
+            .offset,
 
         back_sector_index: if let Some(idx) = back_sector_index {
-            *sector_data
-                .sector_index_by_index
+            sector_data
+                .sector_alloc_by_index
                 .get(&idx)
                 .ok_or(anyhow::anyhow!("Back sector index not found."))?
+                .offset
         } else {
             u32::MAX
         },

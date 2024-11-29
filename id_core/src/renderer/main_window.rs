@@ -410,7 +410,7 @@ impl Window<UC> for MainWindow {
                     0..(wall_data.wall_quad_vertex_buf.buf.size()
                         / (wall_data.wall_quad_vertex_buf.stride as u64))
                         as u32,
-                    0..(wall_data.wall_buf.buf.size() / (wall_data.wall_buf.stride as u64)) as u32,
+                    0..(wall_data.highest_wall_index),
                 );
             }
         }

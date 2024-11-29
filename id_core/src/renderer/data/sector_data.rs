@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::Result;
 use encase::ShaderType;
+use offset_allocator::{Allocation, Allocator};
 use ultraviolet::Vec2;
 use wgpu::BufferUsages;
 
@@ -18,7 +19,7 @@ use super::{limits::SECTOR_DATA_SIZE, PaletteImageData};
 pub struct SectorVertexData {
     pub position: Vec2,
     /// This is the index in the sector storage buffer.
-    pub storage_index: u32,
+    pub sector_index: u32,
 }
 
 #[derive(ShaderType)]
@@ -43,9 +44,11 @@ pub struct SectorData {
     /// Stores auxiliary information about each sector.
     pub sector_buf: GpuStorageBuffer<SectorStorageData>,
 
+    sector_alloc: Allocator,
+
     /// This converts "sector_index" (from the wad) into the index of the sector buffer.
-    pub sector_index_by_index: HashMap<usize, u32>,
-    pub sector_index_by_entity: HashMap<hecs::Entity, u32>,
+    pub sector_alloc_by_index: HashMap<usize, Allocation>,
+    sector_alloc_by_entity: HashMap<hecs::Entity, Allocation>,
 }
 
 impl SectorData {
@@ -55,49 +58,30 @@ impl SectorData {
         world: &World,
         palette_image_data: &PaletteImageData,
     ) -> Result<Self> {
-        let mut sector_vertices: Vec<SectorVertexData> = Vec::new();
-        let mut sector_indices: Vec<u32> = Vec::new();
+        let mut sectors: Vec<SectorStorageData> = Vec::new();
 
-        let mut sector_storage: Vec<SectorStorageData> = Vec::new();
+        let mut sector_alloc = Allocator::new(SECTOR_DATA_SIZE as u32);
+        let mut sector_alloc_by_index: HashMap<usize, Allocation> = HashMap::new();
+        let mut sector_alloc_by_entity: HashMap<hecs::Entity, Allocation> = HashMap::new();
 
-        let mut sector_index_by_index: HashMap<usize, u32> = HashMap::new();
-        let mut sector_index_by_entity: HashMap<hecs::Entity, u32> = HashMap::new();
-
+        // Add all the sectors to the buffer.
         for (id, c_sector) in &mut world.world.query::<&CSector>() {
-            for triangle in &c_sector.triangles {
-                let old_vertices_len = sector_vertices.len() as u32;
-                sector_vertices.append(
-                    &mut triangle
-                        .points
-                        .iter()
-                        .map(|p| SectorVertexData {
-                            position: *p,
-                            storage_index: sector_storage.len() as u32,
-                        })
-                        .collect::<Vec<_>>(),
-                );
+            let sector = _create_sector(id, c_sector, world, palette_image_data)?;
+            let alloc = sector_alloc
+                .allocate(1)
+                .ok_or(anyhow::anyhow!("Sector allocation failed, out of space!"))?;
 
-                sector_indices.append(
-                    &mut triangle
-                        .indices
-                        .iter()
-                        .map(|i| i + old_vertices_len)
-                        .collect::<Vec<_>>(),
-                );
-            }
+            // Ensure "push" is correct.
+            assert!(alloc.offset == sectors.len() as u32);
 
-            sector_index_by_index.insert(c_sector.sector_index, sector_storage.len() as u32);
-            sector_index_by_entity.insert(id, sector_storage.len() as u32);
+            sector_alloc_by_index.insert(c_sector.sector_index, alloc);
+            sector_alloc_by_entity.insert(id, alloc);
 
-            sector_storage.push(SectorStorageData {
-                floor_height: c_sector.floor_height as i32,
-                ceiling_height: c_sector.ceiling_height as i32,
-                light_level: c_sector.light_level as u32,
-
-                ceiling_palette_image_index: palette_image_data.lookup_texture(world, id)?,
-                floor_palette_image_index: palette_image_data.lookup_texture_floor(world, id)?,
-            });
+            sectors.push(sector);
         }
+
+        // Create the mesh.
+        let (sector_vertices, sector_indices) = _create_mesh(world, &sector_alloc_by_entity)?;
 
         Ok(Self {
             // Instead of resizing "vertex_buf" and "index_buf",
@@ -119,29 +103,30 @@ impl SectorData {
             sector_buf: GpuStorageBuffer::new_vec(
                 BufferUsages::STORAGE,
                 device,
-                sector_storage,
+                sectors,
                 Some("SectorData::sector_buf"),
             )?
             // Resize so we can add more sectors later.
             .resize(device, queue, SECTOR_DATA_SIZE)?,
-            sector_index_by_index,
-            sector_index_by_entity,
+
+            sector_alloc,
+            sector_alloc_by_index,
+            sector_alloc_by_entity,
         })
     }
 
     pub fn think(
         &mut self,
+        device: &wgpu::Device,
         queue: &wgpu::Queue,
         world: &World,
         palette_image_data: &PaletteImageData,
     ) -> Result<()> {
-        // TODO: Right now we only update auxiliary information.
-        //
-        // We can't handle:
-        // - Changing the shape of the sector.
-        // - Removing a sector.
-        // - Adding a sector.
+        // TODO: We can't handle changing the sectors' triangles yet.
+        // We should build a hash tree or something.
+        let mut needs_recreated_mesh = false;
 
+        // First, update existing sectors.
         for id in world.changed_set.changed() {
             if !world.world.satisfies::<&CSector>(*id)? {
                 continue;
@@ -149,28 +134,147 @@ impl SectorData {
 
             let c_sector = world.world.get::<&CSector>(*id)?;
 
-            let sector_index = *self
-                .sector_index_by_entity
+            let sector = _create_sector(*id, &c_sector, world, palette_image_data)?;
+            let sector_index = self
+                .sector_alloc_by_entity
                 .get(id)
-                .ok_or(anyhow::anyhow!("Sector index not found."))?;
+                .ok_or(anyhow::anyhow!("Sector index not found."))?
+                .offset as usize;
 
-            let data = SectorStorageData {
-                floor_height: c_sector.floor_height as i32,
-                ceiling_height: c_sector.ceiling_height as i32,
-                light_level: c_sector.light_level as u32,
-
-                ceiling_palette_image_index: palette_image_data.lookup_texture(world, *id)?,
-                floor_palette_image_index: palette_image_data.lookup_texture_floor(world, *id)?,
-            };
+            // TODO: If the triangles are updated, we need to recreate the mesh.
 
             // Write the data to the buffer.
             self.sector_buf.write_to_offset(
                 queue,
-                data,
+                sector,
                 sector_index as usize * self.sector_buf.stride,
+            )?;
+        }
+
+        // Next, remove any sectors that were deleted.
+        for id in world.changed_set.removed() {
+            if !world.world.satisfies::<&CSector>(*id)? {
+                continue;
+            }
+
+            // We need to recreate the mesh.
+            needs_recreated_mesh = true;
+
+            let sector_index = self
+                .sector_alloc_by_entity
+                .get(id)
+                .ok_or(anyhow::anyhow!("Sector index not found."))?
+                .offset as usize;
+
+            self.sector_alloc
+                .free(self.sector_alloc_by_entity[id].clone());
+
+            self.sector_alloc_by_entity.remove(id);
+            self.sector_alloc_by_index.remove(&sector_index);
+        }
+
+        // Lastly handle spawned, which will add new walls.
+        for id in world.changed_set.spawned() {
+            if !world.world.satisfies::<&CSector>(*id)? {
+                continue;
+            }
+
+            // We need to recreate the mesh.
+            needs_recreated_mesh = true;
+
+            let c_sector = world.world.get::<&CSector>(*id)?;
+            let sector = _create_sector(*id, &c_sector, world, palette_image_data)?;
+            let alloc = self
+                .sector_alloc
+                .allocate(1)
+                .ok_or(anyhow::anyhow!("Sector allocation failed, out of space!"))?;
+
+            self.sector_alloc_by_index
+                .insert(c_sector.sector_index, alloc);
+            self.sector_alloc_by_entity.insert(*id, alloc);
+
+            // Write the data to the buffer.
+            self.sector_buf.write_to_offset(
+                queue,
+                sector,
+                alloc.offset as usize * self.sector_buf.stride,
+            )?;
+        }
+
+        if needs_recreated_mesh {
+            let (sector_vertices, sector_indices) =
+                _create_mesh(world, &self.sector_alloc_by_entity)?;
+
+            self.vertex_buf = GpuVertexBuffer::new_vec(
+                BufferUsages::VERTEX,
+                device,
+                sector_vertices,
+                Some("SectorData::vertex_buf"),
+            )?;
+            self.index_buf = GpuIndexBuffer::new_vec(
+                BufferUsages::INDEX,
+                device,
+                sector_indices,
+                Some("SectorData::index_buf"),
             )?;
         }
 
         Ok(())
     }
+}
+
+fn _create_sector(
+    id: hecs::Entity,
+    c_sector: &CSector,
+    world: &World,
+    palette_image_data: &PaletteImageData,
+) -> Result<SectorStorageData> {
+    Ok(SectorStorageData {
+        floor_height: c_sector.floor_height as i32,
+        ceiling_height: c_sector.ceiling_height as i32,
+        light_level: c_sector.light_level as u32,
+
+        ceiling_palette_image_index: palette_image_data.lookup_texture(world, id)?,
+        floor_palette_image_index: palette_image_data.lookup_texture_floor(world, id)?,
+    })
+}
+
+fn _create_mesh(
+    world: &World,
+    sector_alloc_by_entity: &HashMap<hecs::Entity, Allocation>,
+) -> Result<(Vec<SectorVertexData>, Vec<u32>)> {
+    let mut sector_vertices: Vec<SectorVertexData> = Vec::new();
+    let mut sector_indices: Vec<u32> = Vec::new();
+
+    for (id, c_sector) in &mut world.world.query::<&CSector>() {
+        for triangle in &c_sector.triangles {
+            let old_vertices_len = sector_vertices.len() as u32;
+
+            let sector_index = sector_alloc_by_entity
+                .get(&id)
+                .ok_or(anyhow::anyhow!("Sector index not found."))?
+                .offset;
+
+            sector_vertices.append(
+                &mut triangle
+                    .points
+                    .iter()
+                    .map(|p| SectorVertexData {
+                        position: *p,
+                        sector_index,
+                    })
+                    .collect::<Vec<_>>(),
+            );
+
+            sector_indices.append(
+                &mut triangle
+                    .indices
+                    .iter()
+                    .map(|i| i + old_vertices_len)
+                    .collect::<Vec<_>>(),
+            );
+        }
+    }
+
+    Ok((sector_vertices, sector_indices))
 }

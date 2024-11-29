@@ -18,7 +18,7 @@ impl ChangedSet {
         self._spawned.insert(entity);
     }
 
-    pub fn spawed(&self) -> &HashSet<hecs::Entity> {
+    pub fn spawned(&self) -> &HashSet<hecs::Entity> {
         &self._spawned
     }
 
