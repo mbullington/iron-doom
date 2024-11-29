@@ -1,7 +1,9 @@
 pub mod geom;
 
+mod changed_set;
 mod stopwatch;
 
+pub use changed_set::ChangedSet;
 pub use stopwatch::Stopwatch;
 
 mod camera;

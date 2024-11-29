@@ -24,6 +24,7 @@ pub fn main_user_context(world: Rc<RefCell<World>>) -> impl UserContextSetup<Mai
         let egui_user_context = egui_user_context()(context, size)?;
 
         let device = context.device;
+        let queue = context.queue;
 
         let ubo = GpuUniformBuffer::new(
             BufferUsages::UNIFORM,
@@ -39,10 +40,11 @@ pub fn main_user_context(world: Rc<RefCell<World>>) -> impl UserContextSetup<Mai
             let world = world.borrow();
 
             let palette_colormap_data = PaletteColormapData::new(device, &world.wad)?;
-            let palette_image_data = PaletteImageData::new(device, &world)?;
+            let palette_image_data = PaletteImageData::new(device, queue, &world)?;
 
-            let sector_data = SectorData::new(device, &world, &palette_image_data)?;
-            let wall_data = WallData::new(device, &world, &sector_data, &palette_image_data)?;
+            let sector_data = SectorData::new(device, queue, &world, &palette_image_data)?;
+            let wall_data =
+                WallData::new(device, queue, &world, &sector_data, &palette_image_data)?;
 
             (
                 palette_colormap_data,

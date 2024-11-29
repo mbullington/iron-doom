@@ -17,16 +17,21 @@ impl PaletteColormapData {
             .map(|(r, g, b)| Vec3::new(*r as f32, *g as f32, *b as f32))
             .collect::<Vec<Vec3>>();
 
-        let palette_storage_buf =
-            GpuStorageBuffer::new_vec(BufferUsages::STORAGE, device, palette, None)?;
-
         let colormap = wad.parse_colormaps()?;
-        let colormap_storage_buf =
-            GpuU8StorageBuffer::new_vec(BufferUsages::STORAGE, device, colormap, None)?;
 
         Ok(Self {
-            palette_storage_buf,
-            colormap_storage_buf,
+            palette_storage_buf: GpuStorageBuffer::new_vec(
+                BufferUsages::STORAGE,
+                device,
+                palette,
+                None,
+            )?,
+            colormap_storage_buf: GpuU8StorageBuffer::new_vec(
+                BufferUsages::STORAGE,
+                device,
+                colormap,
+                None,
+            )?,
         })
     }
 }

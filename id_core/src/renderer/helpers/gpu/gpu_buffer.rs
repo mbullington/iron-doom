@@ -37,7 +37,7 @@ where
         len_or_data: LenOrData<DataType>,
         label: Option<&'static str>,
     ) -> Result<Self> {
-        let usage = usage | BufferUsages::COPY_DST;
+        let usage = usage | BufferUsages::COPY_DST | BufferUsages::COPY_SRC;
         let buf = create_buf_encase(device, usage, len_or_data, label)?;
 
         let stride = buf.size() as usize;
@@ -58,7 +58,7 @@ where
         data: Vec<DataType>,
         label: Option<&'static str>,
     ) -> Result<Self> {
-        let usage = usage | BufferUsages::COPY_DST;
+        let usage = usage | BufferUsages::COPY_DST | BufferUsages::COPY_SRC;
         let buf = create_buf_encase(device, usage, LenOrData::Data(&data), label)?;
 
         let stride = (buf.size() as usize).checked_div(data.len()).unwrap_or(0);
@@ -104,6 +104,32 @@ where
         }
 
         write_buf_encase(&self.buf, queue, &data, offset as u64)
+    }
+
+    pub fn resize(
+        mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        new_size: usize,
+    ) -> Result<Self> {
+        let new_buf = create_buf_encase(
+            device,
+            self.usage,
+            LenOrData::<DataType>::Len(new_size as u64),
+            None,
+        )?;
+
+        // Copy the old buffer to the new buffer.
+        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+            label: Some("resize"),
+        });
+        encoder.copy_buffer_to_buffer(&self.buf, 0, &new_buf, 0, self.size as u64);
+        queue.submit([encoder.finish()]);
+
+        self.buf = new_buf;
+        self.size = new_size;
+
+        Ok(self)
     }
 
     pub fn bind_group_layout_entry(

@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use id_game_config::{Game, GameConfig};
 use id_map_format::{Texture, Wad};
 
@@ -10,6 +8,7 @@ use crate::{
     components::CWorldPos,
     cvars::{CVarsMap, DEFAULT_CVARS},
     entities::{init_player_entities, init_sector_entities, init_wall_entities},
+    helpers::ChangedSet,
     AnimationStateMap, SectorAccel, Stopwatch,
 };
 
@@ -31,7 +30,7 @@ pub struct World {
     /// use of DerefMut (with polling), or hecs' hashing system.
     ///
     /// Neither of these have the performance we want, so we're doing it manually.
-    pub changed_set: HashSet<hecs::Entity>,
+    pub changed_set: ChangedSet,
 
     pub sector_accel: SectorAccel,
     pub animations: AnimationStateMap,
@@ -85,7 +84,7 @@ impl World {
             world,
             player,
 
-            changed_set: HashSet::new(),
+            changed_set: ChangedSet::default(),
 
             sector_accel,
             animations,

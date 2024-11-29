@@ -1,11 +1,14 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use id_game_config::GameConfig;
 use id_map_format::{Texture, Wad};
 
 use indexmap::IndexMap;
 
-use crate::components::{CTexture, CTextureAnimated, CTextureFloor, CTexturePurpose};
+use crate::{
+    components::{CTexture, CTextureAnimated, CTextureFloor, CTexturePurpose},
+    helpers::ChangedSet,
+};
 
 pub struct AnimationStateMap {
     states: HashMap<(CTexturePurpose, String), String>,
@@ -95,14 +98,14 @@ impl AnimationStateMap {
         self.states.keys()
     }
 
-    pub fn animate_world(&self, changed_set: &mut HashSet<hecs::Entity>, world: &mut hecs::World) {
+    pub fn animate_world(&self, changed_set: &mut ChangedSet, world: &mut hecs::World) {
         // Animate all textures.
         for (id, (c_texture, _c_texture_anim)) in
             world.query_mut::<(&mut CTexture, &CTextureAnimated)>()
         {
             if let Some(next) = self.get(c_texture.purpose, &c_texture.texture_name) {
                 c_texture.texture_name = next;
-                changed_set.insert(id);
+                changed_set.change(id);
             }
         }
 
@@ -112,7 +115,7 @@ impl AnimationStateMap {
         {
             if let Some(next) = self.get(c_texture.0.purpose, &c_texture.0.texture_name) {
                 c_texture.0.texture_name = next;
-                changed_set.insert(id);
+                changed_set.change(id);
             }
         }
     }

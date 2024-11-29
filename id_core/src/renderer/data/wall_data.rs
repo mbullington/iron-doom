@@ -11,7 +11,7 @@ use crate::{
     world::World,
 };
 
-use super::{PaletteImageData, SectorData};
+use super::{limits::WALL_DATA_SIZE, PaletteImageData, SectorData};
 
 #[derive(ShaderType)]
 pub struct WallStorageData {
@@ -52,6 +52,7 @@ pub struct WallData {
 impl WallData {
     pub fn new(
         device: &wgpu::Device,
+        queue: &wgpu::Queue,
         world: &World,
         sector_data: &SectorData,
         palette_image_data: &PaletteImageData,
@@ -86,7 +87,9 @@ impl WallData {
                 device,
                 walls,
                 Some("WallData::wall_buf"),
-            )?,
+            )?
+            // Resize so we can add more walls later.
+            .resize(device, queue, WALL_DATA_SIZE)?,
 
             wall_index_by_entity,
         })
@@ -105,7 +108,7 @@ impl WallData {
         // - Removing a wall.
         // - Adding a wall.
 
-        for id in world.changed_set.iter() {
+        for id in world.changed_set.changed() {
             if !world.world.satisfies::<&CWall>(*id)? {
                 continue;
             }

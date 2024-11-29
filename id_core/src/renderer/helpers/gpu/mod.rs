@@ -11,11 +11,3 @@ pub enum LenOrData<DataType> {
     Len(u64),
     Data(DataType),
 }
-
-enum _LenOrMappedData {
-    Len(u64),
-    /// Second value is the "stride" of the data, if an array.
-    ///
-    /// Otherwise, it is the same as the length.
-    MappedData(Vec<u8>, u64),
-}

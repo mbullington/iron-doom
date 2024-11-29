@@ -16,6 +16,8 @@ use crate::{
     world::World,
 };
 
+use super::limits::PALETTE_IMAGE_DATA_SIZE;
+
 pub const MAGIC_OFFSET_INVALID: u32 = 0;
 pub const MAGIC_OFFSET_SKY: u32 = 8;
 
@@ -25,7 +27,7 @@ pub struct PaletteImageData {
 }
 
 impl PaletteImageData {
-    pub fn new(device: &wgpu::Device, world: &World) -> Result<Self> {
+    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, world: &World) -> Result<Self> {
         let textures = &world.textures;
 
         let mut image_storage_buf: Vec<u8> = Vec::new();
@@ -130,7 +132,9 @@ impl PaletteImageData {
                 device,
                 image_storage_buf,
                 Some("PaletteImageData::image_storage_buf"),
-            )?,
+            )?
+            // Resize so we can add more textures later.
+            .resize(device, queue, PALETTE_IMAGE_DATA_SIZE)?,
             image_storage_by_index,
         })
     }

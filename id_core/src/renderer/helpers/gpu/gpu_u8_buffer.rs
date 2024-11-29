@@ -52,6 +52,16 @@ impl GpuU8Buffer {
         self.gpu_buffer.write_vec(queue, u32_data)
     }
 
+    pub fn resize(
+        mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        new_size: usize,
+    ) -> Result<Self> {
+        self.gpu_buffer = self.gpu_buffer.resize(device, queue, new_size)?;
+        Ok(self)
+    }
+
     pub fn bind_group_layout_entry(
         &self,
         binding: u32,

@@ -11,7 +11,7 @@ use crate::{
     world::World,
 };
 
-use super::PaletteImageData;
+use super::{limits::SECTOR_DATA_SIZE, PaletteImageData};
 
 #[repr(C)]
 #[derive(ShaderType)]
@@ -51,6 +51,7 @@ pub struct SectorData {
 impl SectorData {
     pub fn new(
         device: &wgpu::Device,
+        queue: &wgpu::Queue,
         world: &World,
         palette_image_data: &PaletteImageData,
     ) -> Result<Self> {
@@ -99,6 +100,8 @@ impl SectorData {
         }
 
         Ok(Self {
+            // Instead of resizing "vertex_buf" and "index_buf",
+            // we just recreate them later if we need to add more sectors.
             vertex_buf: GpuVertexBuffer::new_vec(
                 BufferUsages::VERTEX,
                 device,
@@ -111,12 +114,16 @@ impl SectorData {
                 sector_indices,
                 Some("SectorData::index_buf"),
             )?,
+            // For sector_buf, it requires us re-doing the bind group,
+            // so we artifically resize it to a fixed size.
             sector_buf: GpuStorageBuffer::new_vec(
                 BufferUsages::STORAGE,
                 device,
                 sector_storage,
                 Some("SectorData::sector_buf"),
-            )?,
+            )?
+            // Resize so we can add more sectors later.
+            .resize(device, queue, SECTOR_DATA_SIZE)?,
             sector_index_by_index,
             sector_index_by_entity,
         })
@@ -135,7 +142,7 @@ impl SectorData {
         // - Removing a sector.
         // - Adding a sector.
 
-        for id in world.changed_set.iter() {
+        for id in world.changed_set.changed() {
             if !world.world.satisfies::<&CSector>(*id)? {
                 continue;
             }
