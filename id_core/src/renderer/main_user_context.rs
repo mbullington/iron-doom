@@ -115,7 +115,7 @@ impl UserContext for MainUserContext {
         self.sector_data.think(
             context.device,
             context.queue,
-            &world.borrow(),
+            &mut world.borrow_mut(),
             &self.palette_image_data,
         )?;
         self.wall_data.think(

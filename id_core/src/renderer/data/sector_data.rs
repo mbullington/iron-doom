@@ -124,7 +124,7 @@ impl SectorData {
         &mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
-        world: &World,
+        world: &mut World,
         palette_image_data: &PaletteImageData,
     ) -> Result<()> {
         // TODO: We can't handle changing the sectors' triangles yet.
@@ -137,7 +137,7 @@ impl SectorData {
                 continue;
             }
 
-            let c_sector = world.world.get::<&CSector>(*id)?;
+            let mut c_sector = world.world.get::<&mut CSector>(*id)?;
 
             let sector = _create_sector(*id, &c_sector, world, palette_image_data)?;
             let sector_index = self
@@ -147,6 +147,11 @@ impl SectorData {
                 .offset as usize;
 
             // TODO: If the triangles are updated, we need to recreate the mesh.
+            if c_sector.triangles.changed() {
+                println!("Sector {} triangles changed.", sector_index);
+                needs_recreated_mesh = true;
+                c_sector.triangles.clear_changed();
+            }
 
             // Write the data to the buffer.
             self.sector_buf.write_to_offset(
@@ -251,7 +256,7 @@ fn _create_mesh(
     let mut sector_indices: Vec<u32> = Vec::new();
 
     for (id, c_sector) in &mut world.world.query::<&CSector>() {
-        for triangle in &c_sector.triangles {
+        for triangle in c_sector.triangles.iter() {
             let old_vertices_len = sector_vertices.len() as u32;
 
             let sector_index = sector_alloc_by_entity

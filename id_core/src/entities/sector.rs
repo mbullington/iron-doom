@@ -13,7 +13,10 @@ use crate::{
         CSector, CTexture, CTextureAnimated, CTextureFloor, CTexturePurpose, CTextureSky,
         CTextureSkyFloor,
     },
-    helpers::geom::{Graph2d, PolygonShape2d, Triangles2d},
+    helpers::{
+        geom::{Graph2d, PolygonShape2d, Triangles2d},
+        ChangedField,
+    },
     AnimationStateMap,
 };
 
@@ -101,7 +104,7 @@ pub fn init_sector_entities(world: &mut hecs::World, map: &Map, animations: &Ani
 
             let mut builder = EntityBuilder::new();
             builder.add(CSector {
-                triangles,
+                triangles: ChangedField::new(triangles),
                 sector_index: i,
                 floor_height: sector.floor_height,
                 ceiling_height: sector.ceiling_height,

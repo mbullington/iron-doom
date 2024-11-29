@@ -31,7 +31,7 @@ impl SectorAccel {
                 }
 
                 let candidate_sector = world.get::<&CSector>(*sector).unwrap();
-                for triangle in &candidate_sector.triangles {
+                for triangle in candidate_sector.triangles.iter() {
                     if triangle.has_point(point_xz) {
                         found_sector = Some(*sector);
                         break;
