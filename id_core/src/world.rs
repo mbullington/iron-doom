@@ -95,7 +95,7 @@ impl World {
         // Time how long it takes to spawn the entities.
         let mut stopwatch = Stopwatch::new();
 
-        let animations = AnimationStateMap::from_game_config(&game_config, &iwad, &textures);
+        let animations = AnimationStateMap::from_game_config(&game_config, &iwad, &pwad, &textures);
 
         // Add walls to the world.
         init_wall_entities(&mut world, &map, &animations);
