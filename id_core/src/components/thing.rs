@@ -12,26 +12,26 @@ pub struct CWorldPos {
 }
 
 impl Movable for CWorldPos {
-    fn get_pos(&self) -> Vec3 {
+    fn pos(&self) -> Vec3 {
         self.pos
     }
 
     fn translate(&mut self, delta: Vec3) {
-        let delta_target = self.get_rotor() * delta;
+        let delta_target = self.rotor() * delta;
         self.pos += delta_target;
     }
 
     fn translate_xz(&mut self, delta: Vec3) {
-        let mut delta_target = self.get_rotor() * delta;
+        let mut delta_target = self.rotor() * delta;
         delta_target.y = 0.0;
 
         self.pos += delta_target;
     }
 
-    fn get_yaw(&self) -> f32 {
+    fn yaw(&self) -> f32 {
         self.yaw
     }
-    fn get_pitch(&self) -> f32 {
+    fn pitch(&self) -> f32 {
         self.pitch
     }
 

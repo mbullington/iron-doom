@@ -10,10 +10,10 @@ pub struct Camera<'a, M: Movable> {
 }
 
 impl<M: Movable> Camera<'_, M> {
-    pub fn get_view_matrix(&self) -> Mat4 {
+    pub fn view_matrix(&self) -> Mat4 {
         Mat4::look_at_lh(
-            self.movable.get_pos(),
-            self.movable.get_pos() + self.movable.get_look_at_vector(),
+            self.movable.pos(),
+            self.movable.pos() + self.movable.look_at_vector(),
             Vec3 {
                 x: 0.0,
                 y: 1.0,
@@ -27,7 +27,7 @@ impl<M: Movable> Camera<'_, M> {
     /// Assumptions:
     /// - WebGPU, like DirectX, uses a left-handed coordinate system with Y pointing up.
     /// - Reverse Z with an infinite far plane.
-    pub fn get_projection_matrix(&self, display_size: UVec2) -> Mat4 {
+    pub fn projection_matrix(&self, display_size: UVec2) -> Mat4 {
         let aspect_ratio = (display_size.x as f64 / display_size.y as f64) as f32;
         perspective_reversed_infinite_z_wgpu_dx_gl(self.fov.to_radians(), aspect_ratio, self.z_near)
     }

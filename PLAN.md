@@ -4,7 +4,6 @@ Short-term:
 - [ ] more documentation
 
 Code quality / bugs:
-- [ ] Switch to `winit`
 - [ ] Broken walls on Chex Quest
 - [ ] Make ECS for palette images "real time"
 - [ ] Various issues on `SOS_Boom.wad`: `MAP32`

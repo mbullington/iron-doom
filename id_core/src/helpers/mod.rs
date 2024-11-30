@@ -13,19 +13,16 @@ pub use camera::Camera;
 use ultraviolet::{Rotor3, Vec3};
 
 pub trait Movable {
-    fn get_pos(&self) -> Vec3;
+    fn pos(&self) -> Vec3;
     fn translate(&mut self, delta: Vec3);
     fn translate_xz(&mut self, delta: Vec3);
 
-    fn get_yaw(&self) -> f32;
-    fn get_pitch(&self) -> f32;
+    fn yaw(&self) -> f32;
+    fn pitch(&self) -> f32;
 
-    fn get_rotor(&self) -> Rotor3 {
-        let mut rotor = Rotor3::from_euler_angles(
-            0.0,
-            self.get_pitch().to_radians(),
-            self.get_yaw().to_radians(),
-        );
+    fn rotor(&self) -> Rotor3 {
+        let mut rotor =
+            Rotor3::from_euler_angles(0.0, self.pitch().to_radians(), self.yaw().to_radians());
         rotor.normalize();
         rotor
     }
@@ -47,7 +44,7 @@ pub trait Movable {
         self.translate(delta_z);
     }
 
-    fn get_look_at_vector(&self) -> Vec3 {
+    fn look_at_vector(&self) -> Vec3 {
         // By default, we look down the positive Z axis (forward).
         let look_at_vector = Vec3 {
             x: 0.0,
@@ -55,7 +52,7 @@ pub trait Movable {
             z: 1.0,
         };
 
-        self.get_rotor() * look_at_vector
+        self.rotor() * look_at_vector
     }
 
     fn rotate_pitch_yaw(&mut self, pitch: f32, yaw: f32);

@@ -135,8 +135,7 @@ impl UserContext for MainUserContext {
                 fov: cvars.r_fov,
             };
 
-            let view_proj_mat =
-                camera.get_projection_matrix(context.size) * camera.get_view_matrix();
+            let view_proj_mat = camera.projection_matrix(context.size) * camera.view_matrix();
 
             CameraInfo {
                 view_proj_mat,
