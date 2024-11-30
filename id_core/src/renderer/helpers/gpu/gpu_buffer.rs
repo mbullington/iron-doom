@@ -37,7 +37,7 @@ where
         len_or_data: LenOrData<DataType>,
         label: Option<&'static str>,
     ) -> Result<Self> {
-        let usage = usage | BufferUsages::COPY_DST | BufferUsages::COPY_SRC;
+        let usage = usage | BufferUsages::COPY_DST;
         let buf = create_buf_encase(device, usage, len_or_data, label)?;
 
         let stride = buf.size() as usize;
@@ -59,7 +59,7 @@ where
         preallocated_size: Option<u64>,
         label: Option<&'static str>,
     ) -> Result<Self> {
-        let usage = usage | BufferUsages::COPY_DST | BufferUsages::COPY_SRC;
+        let usage = usage | BufferUsages::COPY_DST;
         let buf = create_buf_encase(
             device,
             usage,
