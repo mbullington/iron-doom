@@ -37,27 +37,27 @@ impl MovementController {
     pub fn think(&self, movable: &mut impl Movable, delta: Duration) {
         let mut movement = Vec3::default();
 
-        if *self.key_presses.get(&SystemKeycode::W).unwrap_or(&false) {
+        if *self.key_presses.get(&SystemKeycode::KeyW).unwrap_or(&false) {
             movement.z += 1.;
         }
-        if *self.key_presses.get(&SystemKeycode::S).unwrap_or(&false) {
+        if *self.key_presses.get(&SystemKeycode::KeyS).unwrap_or(&false) {
             movement.z -= 1.;
         }
-        if *self.key_presses.get(&SystemKeycode::A).unwrap_or(&false) {
+        if *self.key_presses.get(&SystemKeycode::KeyA).unwrap_or(&false) {
             movement.x -= 1.;
         }
-        if *self.key_presses.get(&SystemKeycode::D).unwrap_or(&false) {
+        if *self.key_presses.get(&SystemKeycode::KeyD).unwrap_or(&false) {
             movement.x += 1.;
         }
 
         // If either Shift is pressed, make the movement faster.
         if *self
             .key_presses
-            .get(&SystemKeycode::LShift)
+            .get(&SystemKeycode::ShiftLeft)
             .unwrap_or(&false)
             || *self
                 .key_presses
-                .get(&SystemKeycode::RShift)
+                .get(&SystemKeycode::ShiftRight)
                 .unwrap_or(&false)
         {
             movement *= 3.;

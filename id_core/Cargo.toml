@@ -35,6 +35,9 @@ egui-console = { version = "0.2.0", path = "../third_party/egui_console" }
 # parallelism
 rayon = "1.10.0"
 
+# system crates
+keycode = { workspace = true }
+
 # random rust crates
 thiserror = "1.0.64"
 anyhow = "1.0.89"

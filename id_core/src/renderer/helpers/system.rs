@@ -1,6 +1,8 @@
 // Since we don't want to use SDL2 across the board (namely: so we can have viewer/editor on Web),
 // we define a subset of system abstractions here.
 
+use keycode::{KeyMap, KeyMappingCode, KeyMappingId, KeyModifiers};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SystemMouseButton {
     Left,
@@ -8,133 +10,28 @@ pub enum SystemMouseButton {
     Right,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct SystemMod {
-    pub alt: bool,
-    pub ctrl: bool,
-    pub shift: bool,
-    pub mac_cmd: bool,
-    pub command: bool,
-}
+pub type SystemKeycode = KeyMappingCode;
+pub type SystemMod = KeyModifiers;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum SystemKeycode {
-    LShift,
-    RShift,
-    Underscore,
-    Minus,
-    Left,
-    Up,
-    Right,
-    Down,
-    Escape,
-    Tab,
-    Backspace,
-    Space,
-    Return,
-    Insert,
-    Home,
-    Delete,
-    End,
-    PageDown,
-    PageUp,
-    Kp0,
-    Num0,
-    Kp1,
-    Num1,
-    Kp2,
-    Num2,
-    Kp3,
-    Num3,
-    Kp4,
-    Num4,
-    Kp5,
-    Num5,
-    Kp6,
-    Num6,
-    Kp7,
-    Num7,
-    Kp8,
-    Num8,
-    Kp9,
-    Num9,
-    Period,
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
-    G,
-    H,
-    I,
-    J,
-    K,
-    L,
-    M,
-    N,
-    O,
-    P,
-    Q,
-    R,
-    S,
-    T,
-    U,
-    V,
-    W,
-    X,
-    Y,
-    Z,
-}
+#[allow(clippy::result_unit_err)]
+pub fn parse_keymap_from_usb(scancode: u16) -> Result<KeyMap, ()> {
+    // Override the non-USB keys, which are broken in this crate.
+    //
+    // Reference:
+    // https://chromium.googlesource.com/chromium/src/+/dff16958029d9a8fb9004351f72e961ed4143e83/ui/events/keycodes/dom/keycode_converter_data.inc
+    // https://github.com/dfrankland/keycode/issues/12
+    let id = match scancode {
+        0x0010 => KeyMappingId::UsM,
+        0x0011 => KeyMappingId::UsN,
+        0x0012 => KeyMappingId::UsO,
+        0x0013 => KeyMappingId::UsP,
+        0x0014 => KeyMappingId::UsQ,
+        0x0015 => KeyMappingId::UsR,
+        0x0016 => KeyMappingId::UsS,
+        _ => return KeyMap::from_key_mapping(keycode::KeyMapping::Usb(scancode)),
+    };
 
-impl SystemKeycode {
-    /// For alphanumeric characters (and some things like spaces, underscores),
-    /// this will return the character as a string.
-    pub fn to_text(&self) -> Option<&'static str> {
-        match self {
-            SystemKeycode::A => Some("a"),
-            SystemKeycode::B => Some("b"),
-            SystemKeycode::C => Some("c"),
-            SystemKeycode::D => Some("d"),
-            SystemKeycode::E => Some("e"),
-            SystemKeycode::F => Some("f"),
-            SystemKeycode::G => Some("g"),
-            SystemKeycode::H => Some("h"),
-            SystemKeycode::I => Some("i"),
-            SystemKeycode::J => Some("j"),
-            SystemKeycode::K => Some("k"),
-            SystemKeycode::L => Some("l"),
-            SystemKeycode::M => Some("m"),
-            SystemKeycode::N => Some("n"),
-            SystemKeycode::O => Some("o"),
-            SystemKeycode::P => Some("p"),
-            SystemKeycode::Q => Some("q"),
-            SystemKeycode::R => Some("r"),
-            SystemKeycode::S => Some("s"),
-            SystemKeycode::T => Some("t"),
-            SystemKeycode::U => Some("u"),
-            SystemKeycode::V => Some("v"),
-            SystemKeycode::W => Some("w"),
-            SystemKeycode::X => Some("x"),
-            SystemKeycode::Y => Some("y"),
-            SystemKeycode::Z => Some("z"),
-            SystemKeycode::Space => Some(" "),
-            SystemKeycode::Num0 => Some("0"),
-            SystemKeycode::Num1 => Some("1"),
-            SystemKeycode::Num2 => Some("2"),
-            SystemKeycode::Num3 => Some("3"),
-            SystemKeycode::Num4 => Some("4"),
-            SystemKeycode::Num5 => Some("5"),
-            SystemKeycode::Num6 => Some("6"),
-            SystemKeycode::Num7 => Some("7"),
-            SystemKeycode::Num8 => Some("8"),
-            SystemKeycode::Num9 => Some("9"),
-            SystemKeycode::Underscore => Some("_"),
-            SystemKeycode::Minus => Some("_"),
-            SystemKeycode::Period => Some("."),
-            _ => None,
-        }
-    }
+    Ok(KeyMap::from(id))
 }
 
 pub enum SystemEvent {
@@ -145,6 +42,9 @@ pub enum SystemEvent {
     KeyUp {
         keycode: SystemKeycode,
         mods: SystemMod,
+    },
+    Text {
+        text: String,
     },
     MouseMotion {
         x: i32,

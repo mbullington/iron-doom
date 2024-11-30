@@ -10,7 +10,7 @@ use super::{
         window::{Window, WindowContext, WindowSetup},
     },
     main_user_context::MainUserContext,
-    system::{SystemEvent, SystemKeycode},
+    system::{SystemEvent, SystemKeycode, SystemMod},
 };
 
 use MainUserContext as UC;
@@ -51,8 +51,8 @@ impl Window<UC> for DebugWindow {
         _context: &mut WindowContext<UC>,
         event: &super::system::SystemEvent,
     ) -> Result<bool> {
-        if let SystemEvent::KeyDown { keycode, mods, .. } = event {
-            if *keycode == SystemKeycode::T && mods.ctrl {
+        if let SystemEvent::KeyDown { keycode, .. } = event {
+            if *keycode == SystemKeycode::Backquote {
                 self.console_active = !self.console_active;
                 self.autofocus = self.console_active;
                 return Ok(true);

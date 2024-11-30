@@ -8,5 +8,7 @@ id-core = { version = "0.1.0", path = "../id_core" }
 id-map-format = { version = "0.1.0", path = "../id_map_format" }
 
 sdl2 = { version = "0.37.0", features = ["raw-window-handle"] }
+keycode = { workspace = true }
+
 ultraviolet = { workspace = true }
 pollster = "0.3.0"
