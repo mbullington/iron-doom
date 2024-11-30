@@ -2,15 +2,15 @@
 
 
 fn mod2i(a: i32, b: i32) -> i32 {
-	var m = a % b;
-	if (m < 0) {
-		if (b < 0) {
-			m -= b;
-		} else {
-			m += b;
-		}
-	}
-	return m;
+    var m = a % b;
+    if (m < 0) {
+        if (b < 0) {
+            m -= b;
+        } else {
+            m += b;
+        }
+    }
+    return m;
 }
 
 fn srgb_to_linear(

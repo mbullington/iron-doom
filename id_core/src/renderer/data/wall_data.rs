@@ -42,7 +42,7 @@ pub struct WallStorageData {
 /// position.
 pub struct WallData {
     /// The basic quad that we'll render for walls.
-    pub wall_quad_vertex_buf: GpuVertexBuffer<Vec2>,
+    pub quad_vertex_buf: GpuVertexBuffer<Vec2>,
 
     /// Stores middle, upper, and lower walls.
     pub wall_buf: GpuStorageBuffer<WallStorageData>,
@@ -83,7 +83,7 @@ impl WallData {
         }
 
         Ok(Self {
-            wall_quad_vertex_buf: GpuVertexBuffer::new_vec(
+            quad_vertex_buf: GpuVertexBuffer::new_vec(
                 BufferUsages::VERTEX,
                 device,
                 vec![
@@ -95,7 +95,7 @@ impl WallData {
                     Vec2::new(1., 1.),
                 ],
                 None,
-                Some("WallData::wall_quad_vertex_buf"),
+                Some("WallData::quad_vertex_buf"),
             )?,
 
             wall_buf: GpuStorageBuffer::new_vec(

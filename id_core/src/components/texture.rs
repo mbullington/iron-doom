@@ -1,31 +1,38 @@
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum CTexturePurpose {
-    /// Used for flats (walls).
-    Flat,
+/// We handle textures as part of a unified system.
+///
+/// Sources can be:
+/// - flat (floor/ceiling)
+/// - texture (wall)
+/// - sprite (things)
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub enum CTexture {
+    Sky,
+    /// Used for sectors (floor/ceiling).
+    Flat(String),
     /// Used for walls.
-    Texture,
+    Texture(String),
     // Used for things.
-    // Sprite,
+    Sprite(String),
 }
 
-/// Asset has either a flat (floor/ceiling), texture (wall), or sprite (things).
+/// [CTextureAnimated] is a hint to our ECS system that the texture
+/// should be animated on frame update.
 ///
-/// We handle them all the same.
-#[derive(Debug)]
-pub struct CTexture {
-    pub purpose: CTexturePurpose,
-    pub texture_name: String,
-}
-
-pub struct CTextureFloor(pub CTexture);
-
-/// Asset is either a flat (ceiling) or texture (wall).
-///
-/// Render the quad as the sky texture.
-#[derive(Debug)]
-pub struct CTextureSky {}
-
-pub struct CTextureSkyFloor(pub CTextureSky);
-
+/// Normally, an entity would add this after consulting [AnimationStateMap].
 #[derive(Debug)]
 pub struct CTextureAnimated {}
+
+/// [CTextureOrdinal] is a hint to our ECS system that the texture
+/// should be changed based on player's ordinal direction.
+///
+/// Normally, an entity would add this after consulting [AnimationStateMap].
+///
+/// This only has an effect for sprites.
+#[derive(Debug)]
+pub struct CTextureOrdinal {}
+
+/// We cannot have two [CTexture] in the same entity, however
+/// this is necesary for sectors which have a floor and ceiling.
+///
+/// [CTextureFloor] is thus used for the floor, and [CTexture] for the ceiling.
+pub struct CTextureFloor(pub CTexture);

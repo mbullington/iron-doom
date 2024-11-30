@@ -6,12 +6,12 @@ use id_map_format::{Texture, Wad};
 use indexmap::IndexMap;
 
 use crate::{
-    components::{CTexture, CTextureAnimated, CTextureFloor, CTexturePurpose},
+    components::{CTexture, CTextureAnimated, CTextureFloor},
     helpers::ChangedSet,
 };
 
 pub struct AnimationStateMap {
-    states: HashMap<(CTexturePurpose, String), String>,
+    states: HashMap<CTexture, CTexture>,
 }
 
 impl AnimationStateMap {
@@ -21,7 +21,7 @@ impl AnimationStateMap {
         pwad: &[Wad],
         textures: &IndexMap<String, Texture>,
     ) -> Self {
-        let mut states = HashMap::<(CTexturePurpose, String), String>::new();
+        let mut states = HashMap::<CTexture, CTexture>::new();
 
         // Animation state transitions are defined as pointers in the WAD lump.
         // Their names are only by convention.
@@ -47,8 +47,8 @@ impl AnimationStateMap {
                         &lump_names_in_order[if i + 1 > end_idx { start_idx } else { i + 1 }];
 
                     states.insert(
-                        (CTexturePurpose::Flat, start_name.clone()),
-                        end_name.clone(),
+                        CTexture::Flat(start_name.clone()),
+                        CTexture::Flat(end_name.clone()),
                     );
                 }
             } else {
@@ -73,8 +73,8 @@ impl AnimationStateMap {
                     let end_name = keys[if i + 1 > end_idx { start_idx } else { i + 1 }];
 
                     states.insert(
-                        (CTexturePurpose::Texture, start_name.clone()),
-                        end_name.clone(),
+                        CTexture::Texture(start_name.clone()),
+                        CTexture::Texture(end_name.clone()),
                     );
                 }
             } else {
@@ -88,15 +88,15 @@ impl AnimationStateMap {
         Self { states }
     }
 
-    pub fn contains_key(&self, purpose: CTexturePurpose, name: &str) -> bool {
-        self.states.contains_key(&(purpose, name.to_string()))
+    pub fn contains_key(&self, c_texture: &CTexture) -> bool {
+        self.states.contains_key(c_texture)
     }
 
-    pub fn get(&self, purpose: CTexturePurpose, name: &str) -> Option<String> {
-        self.states.get(&(purpose, name.to_string())).cloned()
+    pub fn get(&self, c_texture: &CTexture) -> Option<CTexture> {
+        self.states.get(c_texture).cloned()
     }
 
-    pub fn keys(&self) -> impl Iterator<Item = &(CTexturePurpose, String)> {
+    pub fn keys(&self) -> impl Iterator<Item = &CTexture> {
         self.states.keys()
     }
 
@@ -109,8 +109,8 @@ impl AnimationStateMap {
         for (id, (c_texture, _c_texture_anim)) in
             world.query_mut::<(&mut CTexture, &CTextureAnimated)>()
         {
-            if let Some(next) = self.get(c_texture.purpose, &c_texture.texture_name) {
-                c_texture.texture_name = next;
+            if let Some(next) = self.get(c_texture) {
+                *c_texture = next;
                 changed_set.change(id);
             }
         }
@@ -119,8 +119,8 @@ impl AnimationStateMap {
         for (id, (c_texture, _c_texture_anim)) in
             world.query_mut::<(&mut CTextureFloor, &CTextureAnimated)>()
         {
-            if let Some(next) = self.get(c_texture.0.purpose, &c_texture.0.texture_name) {
-                c_texture.0.texture_name = next;
+            if let Some(next) = self.get(&c_texture.0) {
+                c_texture.0 = next;
                 changed_set.change(id);
             }
         }

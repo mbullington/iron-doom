@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+bitflags = { version = "2.6.0", features = ["serde"] }
 hex = "0.4.3"
 id-map-format = { path = "../id_map_format" }
 serde = { version = "1.0.215", features = ["derive"] }

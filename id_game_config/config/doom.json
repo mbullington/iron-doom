@@ -31,7 +31,7 @@
       "height": 64,
       "sprite": "BSPI",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Arachnotron"
     },
     {
@@ -40,7 +40,7 @@
       "height": 56,
       "sprite": "VILE",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Arch-vile"
     },
     {
@@ -49,7 +49,7 @@
       "height": 64,
       "sprite": "BOSS",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Baron of Hell"
     },
     {
@@ -58,7 +58,7 @@
       "height": 56,
       "sprite": "HEAD",
       "sequence": "A+",
-      "class": "MO*^",
+      "flags": "MO*^",
       "description": "Cacodemon"
     },
     {
@@ -67,7 +67,7 @@
       "height": 72,
       "sprite": "KEEN",
       "sequence": "A+",
-      "class": "MO*^",
+      "flags": "MO*^",
       "description": "Commander Keen"
     },
     {
@@ -76,7 +76,7 @@
       "height": 110,
       "sprite": "CYBR",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Cyberdemon"
     },
     {
@@ -85,7 +85,7 @@
       "height": 56,
       "sprite": "SARG",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Demon"
     },
     {
@@ -94,7 +94,7 @@
       "height": 56,
       "sprite": "CPOS",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Heavy weapon dude"
     },
     {
@@ -103,7 +103,7 @@
       "height": 64,
       "sprite": "BOS2",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Hell knight"
     },
     {
@@ -112,7 +112,7 @@
       "height": 56,
       "sprite": "TROO",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Imp"
     },
     {
@@ -121,7 +121,7 @@
       "height": 56,
       "sprite": "SKUL",
       "sequence": "AB+",
-      "class": "MO*^",
+      "flags": "MO*^",
       "description": "Lost soul"
     },
     {
@@ -130,7 +130,7 @@
       "height": 64,
       "sprite": "FATT",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Mancubus"
     },
     {
@@ -139,7 +139,7 @@
       "height": 56,
       "sprite": "PAIN",
       "sequence": "A+",
-      "class": "MO*^",
+      "flags": "MO*^",
       "description": "Pain elemental"
     },
     {
@@ -148,7 +148,7 @@
       "height": 56,
       "sprite": "SKEL",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Revenant"
     },
     {
@@ -157,7 +157,7 @@
       "height": 56,
       "sprite": "SPOS",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Shotgun guy"
     },
     {
@@ -166,7 +166,7 @@
       "height": 56,
       "sprite": "SARG",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Spectre"
     },
     {
@@ -175,7 +175,7 @@
       "height": 100,
       "sprite": "SPID",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Spiderdemon"
     },
     {
@@ -184,7 +184,7 @@
       "height": 56,
       "sprite": "SSWV",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Wolfenstein SS"
     },
     {
@@ -193,7 +193,7 @@
       "height": 56,
       "sprite": "POSS",
       "sequence": "AB+",
-      "class": "MO*",
+      "flags": "MO*",
       "description": "Zombieman"
     },
     {
@@ -202,7 +202,7 @@
       "height": 16,
       "sprite": "BFUG",
       "sequence": "A",
-      "class": "WP",
+      "flags": "WP",
       "description": "BFG9000"
     },
     {
@@ -211,7 +211,7 @@
       "height": 16,
       "sprite": "MGUN",
       "sequence": "A",
-      "class": "WP",
+      "flags": "WP",
       "description": "Chaingun"
     },
     {
@@ -220,7 +220,7 @@
       "height": 16,
       "sprite": "CSAW",
       "sequence": "A",
-      "class": "WP",
+      "flags": "WP",
       "description": "Chainsaw"
     },
     {
@@ -229,7 +229,7 @@
       "height": 16,
       "sprite": "PLAS",
       "sequence": "A",
-      "class": "WP",
+      "flags": "WP",
       "description": "Plasma gun"
     },
     {
@@ -238,7 +238,7 @@
       "height": 16,
       "sprite": "LAUN",
       "sequence": "A",
-      "class": "WP",
+      "flags": "WP",
       "description": "Rocket launcher"
     },
     {
@@ -247,7 +247,7 @@
       "height": 16,
       "sprite": "SHOT",
       "sequence": "A",
-      "class": "WP",
+      "flags": "WP",
       "description": "Shotgun"
     },
     {
@@ -256,7 +256,7 @@
       "height": 16,
       "sprite": "SGN2",
       "sequence": "A",
-      "class": "WP",
+      "flags": "WP",
       "description": "Super shotgun"
     },
     {
@@ -265,7 +265,7 @@
       "height": 16,
       "sprite": "SHEL",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "4 shotgun shells"
     },
     {
@@ -274,7 +274,7 @@
       "height": 16,
       "sprite": "AMMO",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "Box of bullets"
     },
     {
@@ -283,7 +283,7 @@
       "height": 16,
       "sprite": "BROK",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "Box of rockets"
     },
     {
@@ -292,7 +292,7 @@
       "height": 16,
       "sprite": "SBOX",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "Box of shotgun shells"
     },
     {
@@ -301,7 +301,7 @@
       "height": 16,
       "sprite": "CLIP",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "Clip"
     },
     {
@@ -310,7 +310,7 @@
       "height": 16,
       "sprite": "CELL",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "Energy cell"
     },
     {
@@ -319,7 +319,7 @@
       "height": 16,
       "sprite": "CELP",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "Energy cell pack"
     },
     {
@@ -328,7 +328,7 @@
       "height": 16,
       "sprite": "ROCK",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "Rocket"
     },
     {
@@ -337,7 +337,7 @@
       "height": 16,
       "sprite": "BON2",
       "sequence": "ABCDCB",
-      "class": "AP",
+      "flags": "AP",
       "description": "Armor bonus"
     },
     {
@@ -346,7 +346,7 @@
       "height": 16,
       "sprite": "PSTR",
       "sequence": "A",
-      "class": "AP",
+      "flags": "AP",
       "description": "Berserk"
     },
     {
@@ -355,7 +355,7 @@
       "height": 16,
       "sprite": "PMAP",
       "sequence": "ABCDCB",
-      "class": "AP",
+      "flags": "AP",
       "description": "Computer area map"
     },
     {
@@ -364,7 +364,7 @@
       "height": 16,
       "sprite": "BON1",
       "sequence": "ABCDCB",
-      "class": "AP",
+      "flags": "AP",
       "description": "Health bonus"
     },
     {
@@ -373,7 +373,7 @@
       "height": 16,
       "sprite": "PINV",
       "sequence": "ABCD",
-      "class": "AP",
+      "flags": "AP",
       "description": "Invulnerability"
     },
     {
@@ -382,7 +382,7 @@
       "height": 16,
       "sprite": "PVIS",
       "sequence": "AB",
-      "class": "AP",
+      "flags": "AP",
       "description": "Light amplification visor"
     },
     {
@@ -391,7 +391,7 @@
       "height": 16,
       "sprite": "MEGA",
       "sequence": "ABCD",
-      "class": "AP",
+      "flags": "AP",
       "description": "Megasphere"
     },
     {
@@ -400,7 +400,7 @@
       "height": 16,
       "sprite": "PINS",
       "sequence": "ABCD",
-      "class": "AP",
+      "flags": "AP",
       "description": "Partial invisibility"
     },
     {
@@ -409,7 +409,7 @@
       "height": 16,
       "sprite": "SOUL",
       "sequence": "ABCDCB",
-      "class": "AP",
+      "flags": "AP",
       "description": "Supercharge"
     },
     {
@@ -418,7 +418,7 @@
       "height": 16,
       "sprite": "ARM1",
       "sequence": "AB",
-      "class": "P",
+      "flags": "P",
       "description": "Armor"
     },
     {
@@ -427,7 +427,7 @@
       "height": 16,
       "sprite": "BPAK",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "Backpack"
     },
     {
@@ -436,7 +436,7 @@
       "height": 16,
       "sprite": "MEDI",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "Medikit"
     },
     {
@@ -445,7 +445,7 @@
       "height": 16,
       "sprite": "ARM2",
       "sequence": "AB",
-      "class": "P",
+      "flags": "P",
       "description": "Megaarmor"
     },
     {
@@ -454,7 +454,7 @@
       "height": 16,
       "sprite": "SUIT",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "Radiation shielding suit"
     },
     {
@@ -463,7 +463,7 @@
       "height": 16,
       "sprite": "STIM",
       "sequence": "A",
-      "class": "P",
+      "flags": "P",
       "description": "Stimpack"
     },
     {
@@ -472,7 +472,7 @@
       "height": 16,
       "sprite": "BKEY",
       "sequence": "AB",
-      "class": "P",
+      "flags": "P",
       "description": "Blue keycard"
     },
     {
@@ -481,7 +481,7 @@
       "height": 16,
       "sprite": "BSKU",
       "sequence": "AB",
-      "class": "P",
+      "flags": "P",
       "description": "Blue skull key"
     },
     {
@@ -490,7 +490,7 @@
       "height": 16,
       "sprite": "RKEY",
       "sequence": "AB",
-      "class": "P",
+      "flags": "P",
       "description": "Red keycard"
     },
     {
@@ -499,7 +499,7 @@
       "height": 16,
       "sprite": "RSKU",
       "sequence": "AB",
-      "class": "P",
+      "flags": "P",
       "description": "Red skull key"
     },
     {
@@ -508,7 +508,7 @@
       "height": 16,
       "sprite": "YKEY",
       "sequence": "AB",
-      "class": "P",
+      "flags": "P",
       "description": "Yellow keycard"
     },
     {
@@ -517,7 +517,7 @@
       "height": 16,
       "sprite": "YSKU",
       "sequence": "AB",
-      "class": "P",
+      "flags": "P",
       "description": "Yellow skull key"
     },
     {
@@ -526,7 +526,7 @@
       "height": 16,
       "sprite": "SMIT",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Brown stump"
     },
     {
@@ -535,7 +535,7 @@
       "height": 16,
       "sprite": "FCAN",
       "sequence": "ABC",
-      "class": "O",
+      "flags": "O",
       "description": "Burning barrel"
     },
     {
@@ -544,7 +544,7 @@
       "height": 16,
       "sprite": "TRE1",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Burnt tree"
     },
     {
@@ -553,7 +553,7 @@
       "height": 16,
       "sprite": "CBRA",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Candelabra"
     },
     {
@@ -562,7 +562,7 @@
       "height": 16,
       "sprite": "CEYE",
       "sequence": "ABCB",
-      "class": "O",
+      "flags": "O",
       "description": "Evil eye"
     },
     {
@@ -571,7 +571,7 @@
       "height": 42,
       "sprite": "BAR1",
       "sequence": "AB",
-      "class": "O*",
+      "flags": "O*",
       "description": "Exploding barrel"
     },
     {
@@ -580,7 +580,7 @@
       "height": 16,
       "sprite": "POL2",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Five skulls \"shish kebab\""
     },
     {
@@ -589,7 +589,7 @@
       "height": 16,
       "sprite": "FSKU",
       "sequence": "ABC",
-      "class": "O",
+      "flags": "O",
       "description": "Floating skull"
     },
     {
@@ -598,7 +598,7 @@
       "height": 16,
       "sprite": "COLU",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Floor lamp"
     },
     {
@@ -607,7 +607,7 @@
       "height": 52,
       "sprite": "GOR5",
       "sequence": "A",
-      "class": "O^",
+      "flags": "O^",
       "description": "Hanging leg"
     },
     {
@@ -616,7 +616,7 @@
       "height": 68,
       "sprite": "GOR4",
       "sequence": "A",
-      "class": "O^",
+      "flags": "O^",
       "description": "Hanging pair of legs"
     },
     {
@@ -625,7 +625,7 @@
       "height": 64,
       "sprite": "HDB6",
       "sequence": "A",
-      "class": "O^",
+      "flags": "O^",
       "description": "Hanging torso, brain removed"
     },
     {
@@ -634,7 +634,7 @@
       "height": 64,
       "sprite": "HDB3",
       "sequence": "A",
-      "class": "O^",
+      "flags": "O^",
       "description": "Hanging torso, looking down"
     },
     {
@@ -643,7 +643,7 @@
       "height": 64,
       "sprite": "HDB5",
       "sequence": "A",
-      "class": "O^",
+      "flags": "O^",
       "description": "Hanging torso, looking up"
     },
     {
@@ -652,7 +652,7 @@
       "height": 64,
       "sprite": "HDB4",
       "sequence": "A",
-      "class": "O^",
+      "flags": "O^",
       "description": "Hanging torso, open skull"
     },
     {
@@ -661,7 +661,7 @@
       "height": 84,
       "sprite": "GOR2",
       "sequence": "A",
-      "class": "O^",
+      "flags": "O^",
       "description": "Hanging victim, arms out"
     },
     {
@@ -670,7 +670,7 @@
       "height": 88,
       "sprite": "HDB2",
       "sequence": "A",
-      "class": "O^",
+      "flags": "O^",
       "description": "Hanging victim, guts and brain removed"
     },
     {
@@ -679,7 +679,7 @@
       "height": 88,
       "sprite": "HDB1",
       "sequence": "A",
-      "class": "O^",
+      "flags": "O^",
       "description": "Hanging victim, guts removed"
     },
     {
@@ -688,7 +688,7 @@
       "height": 84,
       "sprite": "GOR3",
       "sequence": "A",
-      "class": "O^",
+      "flags": "O^",
       "description": "Hanging victim, one-legged"
     },
     {
@@ -697,7 +697,7 @@
       "height": 68,
       "sprite": "GOR1",
       "sequence": "ABCB",
-      "class": "O^",
+      "flags": "O^",
       "description": "Hanging victim, twitching"
     },
     {
@@ -706,7 +706,7 @@
       "height": 16,
       "sprite": "POL1",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Impaled human"
     },
     {
@@ -715,7 +715,7 @@
       "height": 16,
       "sprite": "TRE2",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Large brown tree"
     },
     {
@@ -724,7 +724,7 @@
       "height": 16,
       "sprite": "POL3",
       "sequence": "AB",
-      "class": "O",
+      "flags": "O",
       "description": "Pile of skulls and candles"
     },
     {
@@ -733,7 +733,7 @@
       "height": 16,
       "sprite": "SMBT",
       "sequence": "ABCD",
-      "class": "O",
+      "flags": "O",
       "description": "Short blue firestick"
     },
     {
@@ -742,7 +742,7 @@
       "height": 16,
       "sprite": "SMGT",
       "sequence": "ABCD",
-      "class": "O",
+      "flags": "O",
       "description": "Short green firestick"
     },
     {
@@ -751,7 +751,7 @@
       "height": 16,
       "sprite": "COL2",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Short green pillar"
     },
     {
@@ -760,7 +760,7 @@
       "height": 16,
       "sprite": "COL5",
       "sequence": "AB",
-      "class": "O",
+      "flags": "O",
       "description": "Short green pillar with beating heart"
     },
     {
@@ -769,7 +769,7 @@
       "height": 16,
       "sprite": "SMRT",
       "sequence": "ABCD",
-      "class": "O",
+      "flags": "O",
       "description": "Short red firestick"
     },
     {
@@ -778,7 +778,7 @@
       "height": 16,
       "sprite": "COL4",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Short red pillar"
     },
     {
@@ -787,7 +787,7 @@
       "height": 16,
       "sprite": "COL6",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Short red pillar with skull"
     },
     {
@@ -796,7 +796,7 @@
       "height": 16,
       "sprite": "TLP2",
       "sequence": "ABCD",
-      "class": "O",
+      "flags": "O",
       "description": "Short techno floor lamp"
     },
     {
@@ -805,7 +805,7 @@
       "height": 16,
       "sprite": "POL4",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Skull on a pole"
     },
     {
@@ -814,7 +814,7 @@
       "height": 16,
       "sprite": "TBLU",
       "sequence": "ABCD",
-      "class": "O",
+      "flags": "O",
       "description": "Tall blue firestick"
     },
     {
@@ -823,7 +823,7 @@
       "height": 16,
       "sprite": "TGRN",
       "sequence": "ABCD",
-      "class": "O",
+      "flags": "O",
       "description": "Tall green firestick"
     },
     {
@@ -832,7 +832,7 @@
       "height": 16,
       "sprite": "COL1",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Tall green pillar"
     },
     {
@@ -841,7 +841,7 @@
       "height": 16,
       "sprite": "TRED",
       "sequence": "ABCD",
-      "class": "O",
+      "flags": "O",
       "description": "Tall red firestick"
     },
     {
@@ -850,7 +850,7 @@
       "height": 16,
       "sprite": "COL3",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Tall red pillar"
     },
     {
@@ -859,7 +859,7 @@
       "height": 16,
       "sprite": "ELEC",
       "sequence": "A",
-      "class": "O",
+      "flags": "O",
       "description": "Tall techno column"
     },
     {
@@ -868,7 +868,7 @@
       "height": 16,
       "sprite": "TLMP",
       "sequence": "ABCD",
-      "class": "O",
+      "flags": "O",
       "description": "Tall techno floor lamp"
     },
     {
@@ -877,7 +877,7 @@
       "height": 16,
       "sprite": "POL6",
       "sequence": "AB",
-      "class": "O",
+      "flags": "O",
       "description": "Twitching impaled human"
     },
     {
@@ -886,7 +886,7 @@
       "height": 16,
       "sprite": "PLAY",
       "sequence": "W",
-      "class": "",
+      "flags": "",
       "description": "Bloody mess"
     },
     {
@@ -895,7 +895,7 @@
       "height": 16,
       "sprite": "PLAY",
       "sequence": "W",
-      "class": "",
+      "flags": "",
       "description": "Bloody mess 2"
     },
     {
@@ -904,7 +904,7 @@
       "height": 16,
       "sprite": "CAND",
       "sequence": "A",
-      "class": "",
+      "flags": "",
       "description": "Candle"
     },
     {
@@ -913,7 +913,7 @@
       "height": 16,
       "sprite": "HEAD",
       "sequence": "L",
-      "class": "",
+      "flags": "",
       "description": "Dead cacodemon"
     },
     {
@@ -922,7 +922,7 @@
       "height": 16,
       "sprite": "SARG",
       "sequence": "N",
-      "class": "",
+      "flags": "",
       "description": "Dead demon"
     },
     {
@@ -931,7 +931,7 @@
       "height": 16,
       "sprite": "POSS",
       "sequence": "L",
-      "class": "",
+      "flags": "",
       "description": "Dead former human"
     },
     {
@@ -940,7 +940,7 @@
       "height": 16,
       "sprite": "SPOS",
       "sequence": "L",
-      "class": "",
+      "flags": "",
       "description": "Dead former sergeant"
     },
     {
@@ -949,7 +949,7 @@
       "height": 16,
       "sprite": "TROO",
       "sequence": "M",
-      "class": "",
+      "flags": "",
       "description": "Dead imp"
     },
     {
@@ -958,7 +958,7 @@
       "height": 16,
       "sprite": "SKUL",
       "sequence": "K",
-      "class": "",
+      "flags": "",
       "description": "Dead lost soul (invisible)"
     },
     {
@@ -967,7 +967,7 @@
       "height": 16,
       "sprite": "PLAY",
       "sequence": "N",
-      "class": "",
+      "flags": "",
       "description": "Dead player"
     },
     {
@@ -976,7 +976,7 @@
       "height": 52,
       "sprite": "GOR5",
       "sequence": "A",
-      "class": "^",
+      "flags": "^",
       "description": "Hanging leg"
     },
     {
@@ -985,7 +985,7 @@
       "height": 68,
       "sprite": "GOR4",
       "sequence": "A",
-      "class": "^",
+      "flags": "^",
       "description": "Hanging pair of legs"
     },
     {
@@ -994,7 +994,7 @@
       "height": 84,
       "sprite": "GOR2",
       "sequence": "A",
-      "class": "^",
+      "flags": "^",
       "description": "Hanging victim, arms out"
     },
     {
@@ -1003,7 +1003,7 @@
       "height": 52,
       "sprite": "GOR3",
       "sequence": "A",
-      "class": "^",
+      "flags": "^",
       "description": "Hanging victim, one-legged"
     },
     {
@@ -1012,7 +1012,7 @@
       "height": 68,
       "sprite": "GOR1",
       "sequence": "ABCB",
-      "class": "^",
+      "flags": "^",
       "description": "Hanging victim, twitching"
     },
     {
@@ -1021,7 +1021,7 @@
       "height": 16,
       "sprite": "POB1",
       "sequence": "A",
-      "class": "",
+      "flags": "",
       "description": "Pool of blood"
     },
     {
@@ -1030,7 +1030,7 @@
       "height": 16,
       "sprite": "POB2",
       "sequence": "A",
-      "class": "",
+      "flags": "",
       "description": "Pool of blood"
     },
     {
@@ -1039,7 +1039,7 @@
       "height": 16,
       "sprite": "POL5",
       "sequence": "A",
-      "class": "",
+      "flags": "",
       "description": "Pool of blood and flesh"
     },
     {
@@ -1048,7 +1048,7 @@
       "height": 16,
       "sprite": "BRS1",
       "sequence": "A",
-      "class": "",
+      "flags": "",
       "description": "Pool of brains"
     }
   ]

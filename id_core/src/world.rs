@@ -8,7 +8,9 @@ use ultraviolet::Vec3;
 use crate::{
     components::CWorldPos,
     cvars::{CVarsMap, DEFAULT_CVARS},
-    entities::{init_player_entities, init_sector_entities, init_wall_entities},
+    entities::{
+        init_player_entities, init_sector_entities, init_thing_entities, init_wall_entities,
+    },
     helpers::ChangedSet,
     AnimationStateMap, SectorAccel, Stopwatch,
 };
@@ -105,8 +107,9 @@ impl World {
         // Build acceleration structure for sectors.
         let sector_accel = SectorAccel::new(&world);
 
-        // Add entities to the world.
+        // Add things to the world.
         // Requires we've already initialized sector accel.
+        init_thing_entities(&mut world, &game_config, &sector_accel, &map);
         let player = init_player_entities(&mut world, &sector_accel, &map)?;
 
         let setup_time = stopwatch.lap();

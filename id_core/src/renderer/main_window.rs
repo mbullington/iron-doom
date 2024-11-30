@@ -402,14 +402,13 @@ impl Window<UC> for MainWindow {
             }
 
             rpass.set_bind_group(0, &self.bind_group, &[]);
-            rpass.set_vertex_buffer(0, wall_data.wall_quad_vertex_buf.buf.slice(..));
+            rpass.set_vertex_buffer(0, wall_data.quad_vertex_buf.buf.slice(..));
 
             {
                 rpass.set_pipeline(&self.render_pipeline_wall);
                 rpass.draw(
-                    0..(wall_data.wall_quad_vertex_buf.buf.size()
-                        / (wall_data.wall_quad_vertex_buf.stride as u64))
-                        as u32,
+                    0..(wall_data.quad_vertex_buf.buf.size()
+                        / (wall_data.quad_vertex_buf.stride as u64)) as u32,
                     0..(wall_data.highest_wall_index + 1),
                 );
             }

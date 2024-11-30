@@ -1,7 +1,7 @@
 use id_map_format::Wad;
 
-use serde::{Deserialize, Serialize};
-use serde_json::Result;
+use bitflags::bitflags;
+use serde::Deserialize;
 use sha2::Digest;
 
 #[derive(Debug, Clone, Copy)]
@@ -53,29 +53,122 @@ impl Game {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct GameConfig {
     pub walls: Vec<(String, String)>,
     pub flats: Vec<(String, String)>,
     pub things: Vec<ThingConfig>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct ThingConfig {
-    thing_type: u32,
+    pub thing_type: u32,
 
-    radius: u32,
-    height: u32,
+    pub flags: ThingFlags,
 
-    sprite: String,
-    sequence: String,
-    class: String,
+    pub radius: u32,
+    pub height: u32,
 
-    description: String,
+    pub sprite: String,
+    pub sequence: ThingSequence,
+
+    pub description: String,
+}
+
+bitflags! {
+    /// These map to the "Class" attribute on DoomWiki.
+    /// https://doomwiki.org/wiki/Thing_types#Monsters
+    #[derive(Debug, Deserialize, Copy, Clone)]
+    #[serde(try_from = "String")]
+    pub struct ThingFlags: u32 {
+        /// Artifact item. Counts toward ITEMS percentage at the end of a level
+        ///
+        /// String code: A
+        const Aritfact = 0b00000001;
+        /// Pickup. Player can pick the thing up by walking over it
+        ///
+        /// String code: P
+        const Pickup = 0b00000010;
+        /// Weapon.
+        ///
+        /// String code: W
+        const Weapon = 0b00000100;
+        /// Monster. Counts towards kill percentage, hidden when using the nomonsters parameter
+        ///
+        /// String code: M
+        const Monster = 0b00001000;
+        /// Obstacle. Players and monsters must walk around
+        ///
+        /// String code: O
+        const Obstacle = 0b00010000;
+        /// Shootable. Player can attack and destroy monster or object
+        ///
+        /// String code: *
+        const Shootable = 0b00100000;
+        /// Hangs from ceiling, or floats if a monster
+        ///
+        /// String code: ^
+        const UpperPegged = 0b01000000;
+    }
+}
+
+impl TryFrom<String> for ThingFlags {
+    type Error = &'static str;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        let mut flags = ThingFlags::empty();
+        for c in s.chars() {
+            match c {
+                'A' => flags |= ThingFlags::Aritfact,
+                'P' => flags |= ThingFlags::Pickup,
+                'W' => flags |= ThingFlags::Weapon,
+                'M' => flags |= ThingFlags::Monster,
+                'O' => flags |= ThingFlags::Obstacle,
+                '*' => flags |= ThingFlags::Shootable,
+                '^' => flags |= ThingFlags::UpperPegged,
+                _ => return Err("Invalid flag"),
+            }
+        }
+
+        Ok(flags)
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(try_from = "String")]
+pub struct ThingSequence {
+    pub sequence: Vec<String>,
+    pub has_gameplay_frame: bool,
+}
+
+impl TryFrom<String> for ThingSequence {
+    type Error = &'static str;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        // We get a sequence like ABCD, where each letter is a frame.
+        // If a + is present at the end, it means a gameplay frame is present.
+
+        let mut sequence = Vec::new();
+        let mut has_gameplay_frame = false;
+
+        for c in s.chars() {
+            if c == '+' {
+                has_gameplay_frame = true;
+                continue;
+            }
+
+            sequence.push(c.to_string());
+        }
+
+        Ok(ThingSequence {
+            sequence,
+            has_gameplay_frame,
+        })
+    }
 }
 
 impl GameConfig {
-    pub fn from_game(game: Game) -> Result<Self> {
+    pub fn from_game(game: Game) -> serde_json::Result<Self> {
         let config_str = match game {
             Game::Doom => include_str!("../config/doom.json"),
             Game::Heretic => include_str!("../config/heretic.json"),

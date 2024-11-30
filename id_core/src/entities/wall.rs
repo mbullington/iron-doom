@@ -4,9 +4,7 @@ use hecs::EntityBuilder;
 use ultraviolet::Vec2;
 
 use crate::{
-    components::{
-        CTexture, CTextureAnimated, CTexturePurpose, CTextureSky, CWall, CWallTwoSided, CWallType,
-    },
+    components::{CTexture, CTextureAnimated, CWall, CWallTwoSided, CWallType},
     AnimationStateMap,
 };
 
@@ -63,16 +61,13 @@ pub fn init_wall_entities(world: &mut hecs::World, map: &Map, animations: &Anima
 
             // Add either texture, or sky.
             if texture == SKY1 {
-                builder.add(CTextureSky {});
+                builder.add(CTexture::Sky);
             } else {
-                builder.add(CTexture {
-                    purpose: CTexturePurpose::Texture,
-                    texture_name: texture.to_string(),
-                });
-            }
-
-            if animations.contains_key(CTexturePurpose::Texture, texture) {
-                builder.add(CTextureAnimated {});
+                let c_texture = CTexture::Texture(texture.to_string());
+                if animations.contains_key(&c_texture) {
+                    builder.add(CTextureAnimated {});
+                }
+                builder.add(c_texture);
             }
 
             world.spawn(builder.build());

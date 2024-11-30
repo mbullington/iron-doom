@@ -4,6 +4,7 @@ Short-term:
 Code quality / bugs:
 - [ ] Broken walls on Chex Quest
 - [ ] Make ECS for palette images "real time"
+- [ ] Removing walls & things doesn't work properly
 - [ ] Various issues on `SOS_Boom.wad`: `MAP32`
 - [ ] **P1:** Make more things use SIMD
 - [ ] **P1:** Add support for mipmaps

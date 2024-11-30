@@ -8,7 +8,7 @@ use wgpu::BufferUsages;
 use crate::{cvars::CVarUniforms, helpers::Camera, world::World, Stopwatch};
 
 use super::{
-    data::{PaletteColormapData, PaletteImageData, SectorData, WallData},
+    data::{PaletteColormapData, PaletteImageData, SectorData, ThingData, WallData},
     egui_user_context,
     helpers::{
         egui::{EguiPlatform, EguiUserContext, HasEguiUserContext},
@@ -33,26 +33,20 @@ pub fn main_user_context(world: Rc<RefCell<World>>) -> impl UserContextSetup<Mai
         // Time how long it takes to parse the wad files.
         let mut stopwatch = Stopwatch::new();
 
-        let (palette_colormap_data, palette_image_data, sector_data, wall_data) = {
-            let world = world.borrow();
+        let world_cloned = world.clone();
+        let world = world.borrow();
 
-            let palette_colormap_data = PaletteColormapData::new(device, &world)?;
-            let palette_image_data = PaletteImageData::new(device, &world)?;
+        let palette_colormap_data = PaletteColormapData::new(device, &world)?;
+        let palette_image_data = PaletteImageData::new(device, &world)?;
 
-            let sector_data = SectorData::new(device, &world, &palette_image_data)?;
-            let wall_data = WallData::new(device, &world, &sector_data, &palette_image_data)?;
+        let sector_data = SectorData::new(device, &world, &palette_image_data)?;
+        let wall_data = WallData::new(device, &world, &sector_data, &palette_image_data)?;
 
-            (
-                palette_colormap_data,
-                palette_image_data,
-                sector_data,
-                wall_data,
-            )
-        };
+        let thing_data = ThingData::new(device, &world, &palette_image_data)?;
 
         Ok(Box::new(MainUserContext {
             egui_user_context,
-            world: world.clone(),
+            world: world_cloned,
 
             ubo,
 
@@ -61,6 +55,7 @@ pub fn main_user_context(world: Rc<RefCell<World>>) -> impl UserContextSetup<Mai
 
             sector_data,
             wall_data,
+            thing_data,
 
             setup_time: stopwatch.lap(),
         }))
@@ -93,6 +88,7 @@ pub struct MainUserContext {
 
     pub sector_data: SectorData,
     pub wall_data: WallData,
+    pub thing_data: ThingData,
 
     pub setup_time: Duration,
 }
@@ -120,6 +116,8 @@ impl UserContext for MainUserContext {
             &self.sector_data,
             &self.palette_image_data,
         )?;
+        self.thing_data
+            .think(context.queue, &world.borrow(), &self.palette_image_data)?;
 
         // Update the camera info, view-projection matrix, and cvars.
         let cvars = CVarUniforms::from_cvars(&self.world.borrow().cvars);

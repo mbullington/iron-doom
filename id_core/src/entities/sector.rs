@@ -9,10 +9,7 @@ use multimap::MultiMap;
 use ultraviolet::Vec2;
 
 use crate::{
-    components::{
-        CSector, CTexture, CTextureAnimated, CTextureFloor, CTexturePurpose, CTextureSky,
-        CTextureSkyFloor,
-    },
+    components::{CSector, CTexture, CTextureAnimated, CTextureFloor},
     helpers::{
         geom::{Graph2d, PolygonShape2d, Triangles2d},
         ChangedField,
@@ -115,31 +112,26 @@ pub fn init_sector_entities(world: &mut hecs::World, map: &Map, animations: &Ani
 
             if sector.ceiling_flat != "-" {
                 if sector.ceiling_flat == F_SKY1 {
-                    builder.add(CTextureSky {});
+                    builder.add(CTexture::Sky);
                 } else {
-                    builder.add(CTexture {
-                        purpose: CTexturePurpose::Flat,
-                        texture_name: sector.ceiling_flat.clone(),
-                    });
-                }
+                    let c_texture = CTexture::Flat(sector.ceiling_flat.clone());
+                    if animations.contains_key(&c_texture) {
+                        builder.add(CTextureAnimated {});
+                    }
 
-                if animations.contains_key(CTexturePurpose::Flat, &sector.ceiling_flat) {
-                    builder.add(CTextureAnimated {});
+                    builder.add(c_texture);
                 }
             }
 
             if sector.floor_flat != "-" {
                 if sector.floor_flat == F_SKY1 {
-                    builder.add(CTextureSkyFloor(CTextureSky {}));
+                    builder.add(CTextureFloor(CTexture::Sky));
                 } else {
-                    builder.add(CTextureFloor(CTexture {
-                        purpose: CTexturePurpose::Flat,
-                        texture_name: sector.floor_flat.clone(),
-                    }));
-                }
-
-                if animations.contains_key(CTexturePurpose::Flat, &sector.floor_flat) {
-                    builder.add(CTextureAnimated {});
+                    let c_texture = CTexture::Flat(sector.floor_flat.clone());
+                    if animations.contains_key(&c_texture) {
+                        builder.add(CTextureAnimated {});
+                    }
+                    builder.add(CTextureFloor(c_texture));
                 }
             }
 

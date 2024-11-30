@@ -1,11 +1,13 @@
 mod palette_colormap_data;
 mod palette_image_data;
 mod sector_data;
+mod thing_data;
 mod wall_data;
 
 pub use palette_colormap_data::*;
 pub use palette_image_data::*;
 pub use sector_data::*;
+pub use thing_data::*;
 pub use wall_data::*;
 
 // Set custom limits for each buffer.
@@ -19,4 +21,5 @@ pub mod limits {
     pub const PALETTE_IMAGE_DATA_SIZE: usize = 75 * 1024 * 1024;
     pub const SECTOR_DATA_SIZE: usize = 10 * 1024 * 1024;
     pub const WALL_DATA_SIZE: usize = 10 * 1024 * 1024;
+    pub const THING_DATA_SIZE: usize = 10 * 1024 * 1024;
 }

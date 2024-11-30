@@ -9,7 +9,7 @@ use wgpu::BufferUsages;
 use id_map_format::{LumpNamespace, Map, Patch};
 
 use crate::{
-    components::{CTexture, CTextureFloor, CTexturePurpose, CTextureSky, CTextureSkyFloor},
+    components::{CTexture, CTextureFloor},
     helpers::UnwrapOrFn,
     renderer::helpers::gpu::GpuU8StorageBuffer,
     world::World,
@@ -22,7 +22,7 @@ pub const MAGIC_OFFSET_SKY: u32 = 8;
 
 pub struct PaletteImageData {
     pub image_storage_buf: GpuU8StorageBuffer,
-    pub image_storage_by_index: HashMap<(CTexturePurpose, String), usize>,
+    pub image_storage_by_index: HashMap<CTexture, usize>,
 }
 
 impl PaletteImageData {
@@ -30,10 +30,19 @@ impl PaletteImageData {
         let textures = &world.textures;
 
         let mut image_storage_buf: Vec<u8> = Vec::new();
-        let mut image_storage_by_index: HashMap<(CTexturePurpose, String), usize> = HashMap::new();
+        let mut image_storage_by_index: HashMap<CTexture, usize> = HashMap::new();
 
-        image_storage_by_index.insert((CTexturePurpose::Flat, "-".to_string()), 0);
-        image_storage_by_index.insert((CTexturePurpose::Texture, "-".to_string()), 0);
+        image_storage_by_index.insert(
+            CTexture::Flat("-".to_string()),
+            MAGIC_OFFSET_INVALID as usize,
+        );
+        image_storage_by_index.insert(
+            CTexture::Texture("-".to_string()),
+            MAGIC_OFFSET_INVALID as usize,
+        );
+
+        // Sky texture is stored at index 8.
+        image_storage_by_index.insert(CTexture::Sky, MAGIC_OFFSET_SKY as usize);
 
         // Used for walls.
         let mut patches_by_name: HashMap<String, PaletteImage> = HashMap::new();
@@ -41,13 +50,13 @@ impl PaletteImageData {
         // Storage i=0 is reserved for empty.
         image_storage_buf.append(&mut vec![0u8; 8]);
 
-        let mut parse_texture = |purpose: &CTexturePurpose, texture_name: &str| -> Result<()> {
-            if image_storage_by_index.contains_key(&(*purpose, texture_name.to_string())) {
+        let mut parse_texture = |c_texture: &CTexture| -> Result<()> {
+            if image_storage_by_index.contains_key(c_texture) {
                 return Ok(());
             }
 
-            let mut palette_image = match purpose {
-                CTexturePurpose::Flat => {
+            let mut palette_image = match c_texture {
+                CTexture::Flat(texture_name) => {
                     world.with_lump(&LumpNamespace::Flat, texture_name, |lump| {
                         // Fill the rest of the buffer with zeros, if it's not a multiple of 4096.
                         let bytes = &mut lump.bytes().to_vec();
@@ -59,7 +68,8 @@ impl PaletteImageData {
                         PaletteImage::from_flat(bytes)
                     })?
                 }
-                CTexturePurpose::Texture => {
+
+                CTexture::Texture(texture_name) | CTexture::Sprite(texture_name) => {
                     let texture = match textures.get(&texture_name.to_uppercase()) {
                         Some(texture) => texture,
                         None => return Err(anyhow::anyhow!("Texture not found: {}", texture_name)),
@@ -88,6 +98,10 @@ impl PaletteImageData {
 
                     palette_image
                 }
+
+                CTexture::Sky => {
+                    panic!("Sky texture should be handled above.");
+                }
             };
 
             // Make sure each entry is 32bit aligned.
@@ -102,26 +116,26 @@ impl PaletteImageData {
             image_storage_buf.append(&mut palette_image.buf);
 
             // Add the aligned len to the index.
-            image_storage_by_index.insert((*purpose, texture_name.to_string()), len_aligned);
+            image_storage_by_index.insert(c_texture.clone(), len_aligned);
 
             Ok(())
         };
 
         // Storage i=8 is reserved for the sky texture.
-        let spy_texture = _get_sky_texture(&world.map);
-        parse_texture(&CTexturePurpose::Texture, spy_texture)?;
+        let sky_texture = _get_sky_texture(&world.map);
+        parse_texture(&CTexture::Texture(sky_texture.to_string()))?;
 
         // Parse textures.
-        for (_id, texture) in &mut world.world.query::<&CTexture>() {
-            parse_texture(&texture.purpose, &texture.texture_name)?;
+        for (_id, c_texture) in &mut world.world.query::<&CTexture>() {
+            parse_texture(c_texture)?;
         }
         // Parse textures for floor flats.
-        for (_id, texture) in &mut world.world.query::<&CTextureFloor>() {
-            parse_texture(&texture.0.purpose, &texture.0.texture_name)?;
+        for (_id, c_texture) in &mut world.world.query::<&CTextureFloor>() {
+            parse_texture(&c_texture.0)?;
         }
         // Parse textures for animation states.
-        for (purpose, texture_name) in world.animations.keys() {
-            parse_texture(purpose, texture_name)?;
+        for c_texture in world.animations.keys() {
+            parse_texture(c_texture)?;
         }
 
         Ok(PaletteImageData {
@@ -140,19 +154,13 @@ impl PaletteImageData {
         Ok(match world.world.query_one::<&CTexture>(id)?.get() {
             Some(texture) => self
                 .image_storage_by_index
-                .get(&(texture.purpose, texture.texture_name.clone()))
+                .get(texture)
                 .map(|x| *x as u32)
                 .unwrap_or_fn(|| {
-                    eprintln!(
-                        "Texture not found: {:?}",
-                        (texture.purpose, texture.texture_name.clone())
-                    );
+                    eprintln!("Texture not found: {:?}", texture);
                     MAGIC_OFFSET_INVALID
                 }),
-            None => match world.world.satisfies::<&CTextureSky>(id)? {
-                true => MAGIC_OFFSET_SKY,
-                false => MAGIC_OFFSET_INVALID,
-            },
+            None => MAGIC_OFFSET_INVALID,
         })
     }
 
@@ -160,19 +168,13 @@ impl PaletteImageData {
         Ok(match world.world.query_one::<&CTextureFloor>(id)?.get() {
             Some(texture) => self
                 .image_storage_by_index
-                .get(&(texture.0.purpose, texture.0.texture_name.clone()))
+                .get(&texture.0)
                 .map(|x| *x as u32)
                 .unwrap_or_fn(|| {
-                    eprintln!(
-                        "Texture not found: {:?}",
-                        (texture.0.purpose, texture.0.texture_name.clone())
-                    );
+                    eprintln!("Texture not found: {:?}", texture.0);
                     MAGIC_OFFSET_INVALID
                 }),
-            None => match world.world.satisfies::<&CTextureSkyFloor>(id)? {
-                true => MAGIC_OFFSET_SKY,
-                false => MAGIC_OFFSET_INVALID,
-            },
+            None => MAGIC_OFFSET_INVALID,
         })
     }
 }
