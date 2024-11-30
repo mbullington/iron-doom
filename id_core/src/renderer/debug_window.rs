@@ -5,7 +5,10 @@ use egui_console::{ConsoleBuilder, ConsoleEvent, ConsoleWindow};
 use ultraviolet::UVec2;
 
 use super::{
-    helpers::window::{HasEguiUserContext, Window, WindowContext, WindowSetup},
+    helpers::{
+        egui::HasEguiUserContext,
+        window::{Window, WindowContext, WindowSetup},
+    },
     main_user_context::MainUserContext,
     system::{SystemEvent, SystemKeycode},
 };

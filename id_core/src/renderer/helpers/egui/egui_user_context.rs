@@ -3,8 +3,8 @@ use std::time::Duration;
 use anyhow::Result;
 use ultraviolet::UVec2;
 
-use super::super::egui_system_platform::EguiPlatform;
-use super::{UserContext, UserContextContext, UserContextSetup};
+use super::super::window::{UserContext, UserContextContext, UserContextSetup};
+use super::egui_system_platform::EguiPlatform;
 
 pub trait HasEguiUserContext {
     fn egui_platform(&mut self) -> &mut EguiPlatform;

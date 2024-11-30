@@ -1,6 +1,5 @@
 Short-term:
 - [ ] remove .resize
-- [ ] piece out egui into its own folder
 - [ ] more documentation
 
 Code quality / bugs:

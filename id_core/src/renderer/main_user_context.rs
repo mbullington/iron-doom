@@ -9,13 +9,11 @@ use crate::{cvars::CVarUniforms, helpers::Camera, world::World, Stopwatch};
 
 use super::{
     data::{PaletteColormapData, PaletteImageData, SectorData, WallData},
+    egui_user_context,
     helpers::{
-        egui_system_platform::EguiPlatform,
+        egui::{EguiPlatform, EguiUserContext, HasEguiUserContext},
         gpu::{GpuUniformBuffer, LenOrData::Len},
-        window::{
-            egui_user_context, EguiUserContext, HasEguiUserContext, UserContext,
-            UserContextContext, UserContextSetup,
-        },
+        window::{UserContext, UserContextContext, UserContextSetup},
     },
 };
 

@@ -4,18 +4,11 @@ use anyhow::Result;
 use ultraviolet::UVec2;
 use wgpu::{Device, Queue, Texture, TextureFormat};
 
+mod overlay_window;
 mod window_runner;
 mod window_sequence;
 
-mod egui_user_context;
-mod egui_window;
-
-mod overlay_window;
-
-pub use egui_user_context::*;
-pub use egui_window::*;
 pub use overlay_window::*;
-
 pub use window_runner::*;
 pub use window_sequence::*;
 

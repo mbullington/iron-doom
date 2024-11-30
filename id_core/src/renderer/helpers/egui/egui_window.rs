@@ -4,9 +4,9 @@ use anyhow::Result;
 use egui_wgpu::ScreenDescriptor;
 
 use super::super::system::SystemEvent;
+use super::super::window::{UserContext, Window, WindowContext, WindowSetup};
 
 use super::egui_user_context::HasEguiUserContext;
-use super::{UserContext, Window, WindowContext, WindowSetup};
 
 pub fn egui_window<UC: UserContext + HasEguiUserContext + 'static>(
     child: impl WindowSetup<UC>,

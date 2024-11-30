@@ -1,4 +1,4 @@
-pub mod egui_system_platform;
+pub mod egui;
 pub mod gpu;
 pub mod movement_controller;
 pub mod system;
