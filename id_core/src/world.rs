@@ -93,6 +93,7 @@ impl World {
         };
 
         let mut world = hecs::World::new();
+        let mut changed_set = ChangedSet::<hecs::Entity>::default();
 
         // Time how long it takes to spawn the entities.
         let mut stopwatch = Stopwatch::new();
@@ -117,6 +118,11 @@ impl World {
         println!("Added {} entities to the world.", world.len());
         println!("Setup time: {:?}", setup_time);
 
+        // Add all entities to the changed_set.
+        for entity_ref in world.iter() {
+            changed_set.spawn(entity_ref.entity());
+        }
+
         Ok(Self {
             iwad,
             pwad,
@@ -131,7 +137,7 @@ impl World {
 
             world,
             player,
-            changed_set: ChangedSet::<hecs::Entity>::default(),
+            changed_set,
 
             sector_accel,
             animations,

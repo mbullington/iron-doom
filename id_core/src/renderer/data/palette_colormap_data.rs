@@ -20,13 +20,11 @@ impl PaletteColormapData {
                 device,
                 world.palette.clone(),
                 None,
-                None,
             )?,
             colormap_storage_buf: GpuU8StorageBuffer::new_vec(
                 BufferUsages::STORAGE,
                 device,
                 world.colormap.clone(),
-                None,
                 None,
             )?,
         })

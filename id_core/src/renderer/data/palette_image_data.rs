@@ -15,8 +15,6 @@ use crate::{
     world::World,
 };
 
-use super::limits::PALETTE_IMAGE_DATA_SIZE;
-
 pub const MAGIC_OFFSET_INVALID: u32 = 0;
 pub const MAGIC_OFFSET_SKY: u32 = 8;
 
@@ -143,7 +141,6 @@ impl PaletteImageData {
                 BufferUsages::STORAGE,
                 device,
                 image_storage_buf,
-                Some(PALETTE_IMAGE_DATA_SIZE as u64),
                 Some("PaletteImageData::image_storage_buf"),
             )?,
             image_storage_by_index,

@@ -25,7 +25,6 @@ impl GpuU8Buffer {
         usage: BufferUsages,
         device: &wgpu::Device,
         mut data: Vec<u8>,
-        preallocated_size: Option<u64>,
         label: Option<&'static str>,
     ) -> Result<Self> {
         // Make sure the data is padded correctly.
@@ -36,7 +35,7 @@ impl GpuU8Buffer {
         data.append(&mut padding);
 
         let u32_data = cast_slice::<u8, u32>(&data).to_vec();
-        let gpu_buffer = GpuBuffer::new_vec(usage, device, u32_data, preallocated_size, label)?;
+        let gpu_buffer = GpuBuffer::new_vec(usage, device, u32_data, label)?;
 
         Ok(GpuU8Buffer { gpu_buffer })
     }

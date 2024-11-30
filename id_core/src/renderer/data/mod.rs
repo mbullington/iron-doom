@@ -18,6 +18,7 @@ pub use wall_data::*;
 // These are very healthy margins: I based them as 2-3x the largest map I could find,
 // SOS_Boom.wad (MAP32).
 pub mod limits {
+    #[allow(dead_code)]
     pub const PALETTE_IMAGE_DATA_SIZE: usize = 75 * 1024 * 1024;
     pub const SECTOR_DATA_SIZE: usize = 10 * 1024 * 1024;
     pub const WALL_DATA_SIZE: usize = 10 * 1024 * 1024;

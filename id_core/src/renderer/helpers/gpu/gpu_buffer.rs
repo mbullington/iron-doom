@@ -1,8 +1,10 @@
 use std::marker::PhantomData;
 
 use anyhow::Result;
-use encase::{internal::WriteInto, ShaderSize, ShaderType};
-use internal::{create_buf_encase, write_buf_encase};
+use encase::{
+    internal::{WriteInto, Writer},
+    ShaderSize, ShaderType,
+};
 use wgpu::{Buffer, BufferUsages};
 
 use super::LenOrData;
@@ -38,9 +40,15 @@ where
         label: Option<&'static str>,
     ) -> Result<Self> {
         let usage = usage | BufferUsages::COPY_DST;
-        let buf = create_buf_encase(device, usage, len_or_data, label)?;
+        let buf = _create_buf_encase(device, usage, len_or_data, label)?;
 
-        let stride = buf.size() as usize;
+        let shader_size = DataType::SHADER_SIZE;
+        let stride = shader_size.get()
+            + DataType::METADATA
+                .alignment()
+                .padding_needed_for(shader_size.get());
+
+        let stride = stride as usize;
         let size = buf.size() as usize;
 
         Ok(GpuBuffer {
@@ -56,16 +64,10 @@ where
         usage: BufferUsages,
         device: &wgpu::Device,
         data: Vec<DataType>,
-        preallocated_size: Option<u64>,
         label: Option<&'static str>,
     ) -> Result<Self> {
         let usage = usage | BufferUsages::COPY_DST;
-        let buf = create_buf_encase(
-            device,
-            usage,
-            LenOrData::Data(&data, preallocated_size),
-            label,
-        )?;
+        let buf = _create_buf_encase(device, usage, LenOrData::Data(&data), label)?;
 
         let shader_size = DataType::SHADER_SIZE;
         let stride = shader_size.get()
@@ -86,7 +88,7 @@ where
     }
 
     pub fn write(&mut self, queue: &wgpu::Queue, data: DataType) -> anyhow::Result<()> {
-        write_buf_encase(&self.buf, queue, data, 0)
+        _write_buf_encase(&self.buf, queue, data, 0)
     }
 
     pub fn write_vec(&mut self, queue: &wgpu::Queue, data: Vec<DataType>) -> Result<()> {
@@ -98,7 +100,7 @@ where
             ));
         }
 
-        write_buf_encase(&self.buf, queue, &data, 0)
+        _write_buf_encase(&self.buf, queue, &data, 0)
     }
 
     pub fn write_to_offset(
@@ -115,7 +117,7 @@ where
             ));
         }
 
-        write_buf_encase(&self.buf, queue, &data, offset as u64)
+        _write_buf_encase(&self.buf, queue, &data, offset as u64)
     }
 
     pub fn bind_group_layout_entry(
@@ -157,104 +159,65 @@ where
     }
 }
 
-mod internal {
-    use anyhow::Result;
-    use encase::{
-        internal::{WriteInto, Writer},
-        ShaderType,
-    };
+fn _create_buf_encase<DataType: ShaderType + WriteInto>(
+    device: &wgpu::Device,
+    usage: wgpu::BufferUsages,
+    len_or_data: LenOrData<DataType>,
+    label: Option<&'static str>,
+) -> Result<wgpu::Buffer> {
+    match len_or_data {
+        LenOrData::Len(len) => {
+            let buffer = device.create_buffer(&wgpu::BufferDescriptor {
+                label,
+                size: len,
+                usage,
+                mapped_at_creation: false,
+            });
 
-    use crate::renderer::helpers::gpu::LenOrData;
+            Ok(buffer)
+        }
+        LenOrData::Data(data) => {
+            let mut inner = Vec::new();
+            let mut writer = Writer::new(&data, &mut inner, 0)?;
+            data.write_into(&mut writer);
 
-    pub enum LenOrMappedData {
-        Len(u64),
-        MappedData(Vec<u8>),
-    }
-
-    pub fn create_buf_encase<DataType: ShaderType + WriteInto>(
-        device: &wgpu::Device,
-        usage: wgpu::BufferUsages,
-        len_or_data: LenOrData<DataType>,
-        label: Option<&'static str>,
-    ) -> Result<wgpu::Buffer> {
-        let len_or_mapped_data = match len_or_data {
-            LenOrData::Len(len) => LenOrMappedData::Len(len),
-            LenOrData::Data(data, preallocated_len) => {
-                let mut inner = Vec::new();
-                let mut writer = Writer::new(&data, &mut inner, 0)?;
-                data.write_into(&mut writer);
-
-                // Add padding if needed.
-                let len = preallocated_len.unwrap_or(inner.len() as u64);
-                if (inner.len() as u64) < len {
-                    inner.resize(len as usize, 0);
-                }
-
-                LenOrMappedData::MappedData(inner)
-            }
-        };
-
-        create_buf(device, usage, len_or_mapped_data, label)
-    }
-
-    pub fn write_buf_encase<DataType: ShaderType + WriteInto>(
-        buffer: &wgpu::Buffer,
-        queue: &wgpu::Queue,
-        data: DataType,
-        offset: u64,
-    ) -> Result<()> {
-        let mut view =
-            queue
-                .write_buffer_with(buffer, offset, data.size())
-                .ok_or(anyhow::anyhow!(
-                    "Failed to write buffer with offset {} and size {}",
-                    offset,
-                    data.size()
-                ))?;
-
-        let mut writer = Writer::new(&data, view.as_mut(), 0)?;
-        data.write_into(&mut writer);
-
-        Ok(())
-    }
-
-    pub fn create_buf(
-        device: &wgpu::Device,
-        usage: wgpu::BufferUsages,
-        len_or_mapped_data: LenOrMappedData,
-        label: Option<&'static str>,
-    ) -> Result<wgpu::Buffer> {
-        match len_or_mapped_data {
-            LenOrMappedData::Len(len) => {
-                let buffer = device.create_buffer(&wgpu::BufferDescriptor {
-                    label,
-                    size: len,
-                    usage,
-                    mapped_at_creation: false,
-                });
-
-                Ok(buffer)
+            let mut size = inner.len() as u64;
+            // Make sure size is a multiple of COPY_BUFFER_ALIGNMENT.
+            if size % wgpu::COPY_BUFFER_ALIGNMENT != 0 {
+                size += wgpu::COPY_BUFFER_ALIGNMENT - (size % wgpu::COPY_BUFFER_ALIGNMENT);
             }
 
-            LenOrMappedData::MappedData(data) => {
-                let mut size = data.len() as u64;
-                // Make sure size is a multiple of COPY_BUFFER_ALIGNMENT.
-                if size % wgpu::COPY_BUFFER_ALIGNMENT != 0 {
-                    size += wgpu::COPY_BUFFER_ALIGNMENT - (size % wgpu::COPY_BUFFER_ALIGNMENT);
-                }
+            let buffer = device.create_buffer(&wgpu::BufferDescriptor {
+                label,
+                size,
+                usage,
+                mapped_at_creation: true,
+            });
 
-                let buffer = device.create_buffer(&wgpu::BufferDescriptor {
-                    label,
-                    size,
-                    usage,
-                    mapped_at_creation: true,
-                });
+            buffer.slice(..).get_mapped_range_mut()[..size as usize].copy_from_slice(&inner);
+            buffer.unmap();
 
-                buffer.slice(..).get_mapped_range_mut()[..size as usize].copy_from_slice(&data);
-                buffer.unmap();
-
-                Ok(buffer)
-            }
+            Ok(buffer)
         }
     }
+}
+
+fn _write_buf_encase<DataType: ShaderType + WriteInto>(
+    buffer: &wgpu::Buffer,
+    queue: &wgpu::Queue,
+    data: DataType,
+    offset: u64,
+) -> Result<()> {
+    let mut view = queue
+        .write_buffer_with(buffer, offset, data.size())
+        .ok_or(anyhow::anyhow!(
+            "Failed to write buffer with offset {} and size {}",
+            offset,
+            data.size()
+        ))?;
+
+    let mut writer = Writer::new(&data, view.as_mut(), 0)?;
+    data.write_into(&mut writer);
+
+    Ok(())
 }

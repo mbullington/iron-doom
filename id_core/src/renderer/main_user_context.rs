@@ -39,10 +39,9 @@ pub fn main_user_context(world: Rc<RefCell<World>>) -> impl UserContextSetup<Mai
         let palette_colormap_data = PaletteColormapData::new(device, &world)?;
         let palette_image_data = PaletteImageData::new(device, &world)?;
 
-        let sector_data = SectorData::new(device, &world, &palette_image_data)?;
-        let wall_data = WallData::new(device, &world, &sector_data, &palette_image_data)?;
-
-        let thing_data = ThingData::new(device, &world, &palette_image_data)?;
+        let sector_data = SectorData::new(device)?;
+        let wall_data = WallData::new(device)?;
+        let thing_data = ThingData::new(device)?;
 
         Ok(Box::new(MainUserContext {
             egui_user_context,

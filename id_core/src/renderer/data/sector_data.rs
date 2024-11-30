@@ -13,7 +13,7 @@ use wgpu::BufferUsages;
 
 use crate::{
     components::CSector,
-    renderer::helpers::gpu::{GpuIndexBuffer, GpuStorageBuffer, GpuVertexBuffer},
+    renderer::helpers::gpu::{GpuIndexBuffer, GpuStorageBuffer, GpuVertexBuffer, LenOrData},
     world::World,
 };
 
@@ -57,66 +57,33 @@ pub struct SectorData {
 }
 
 impl SectorData {
-    pub fn new(
-        device: &wgpu::Device,
-        world: &World,
-        palette_image_data: &PaletteImageData,
-    ) -> Result<Self> {
-        let mut sectors: Vec<SectorStorageData> = Vec::new();
-
-        let mut sector_alloc = Allocator::new(SECTOR_DATA_SIZE as u32);
-        let mut sector_alloc_by_index: HashMap<usize, Allocation> = HashMap::new();
-        let mut sector_alloc_by_entity: HashMap<hecs::Entity, Allocation> = HashMap::new();
-
-        // Add all the sectors to the buffer.
-        for (id, c_sector) in &mut world.world.query::<&CSector>() {
-            let sector = _create_sector(id, c_sector, world, palette_image_data)?;
-            let alloc = sector_alloc
-                .allocate(1)
-                .ok_or(anyhow::anyhow!("Sector allocation failed, out of space!"))?;
-
-            // Ensure "push" is correct.
-            assert!(alloc.offset == sectors.len() as u32);
-
-            sector_alloc_by_index.insert(c_sector.sector_index, alloc);
-            sector_alloc_by_entity.insert(id, alloc);
-
-            sectors.push(sector);
-        }
-
-        // Create the mesh.
-        let (sector_vertices, sector_indices) = _create_mesh(world, &sector_alloc_by_entity)?;
-
+    pub fn new(device: &wgpu::Device) -> Result<Self> {
         Ok(Self {
             // Instead of resizing "vertex_buf" and "index_buf",
             // we just recreate them later if we need to add more sectors.
             vertex_buf: GpuVertexBuffer::new_vec(
                 BufferUsages::VERTEX,
                 device,
-                sector_vertices,
-                None,
+                vec![],
                 Some("SectorData::vertex_buf"),
             )?,
             index_buf: GpuIndexBuffer::new_vec(
                 BufferUsages::INDEX,
                 device,
-                sector_indices,
-                None,
+                vec![],
                 Some("SectorData::index_buf"),
             )?,
-            // For sector_buf, it requires us re-doing the bind group,
-            // so we artifically resize it to a fixed size.
-            sector_buf: GpuStorageBuffer::new_vec(
+
+            sector_buf: GpuStorageBuffer::new(
                 BufferUsages::STORAGE,
                 device,
-                sectors,
-                Some(SECTOR_DATA_SIZE as u64),
+                LenOrData::Len(SECTOR_DATA_SIZE as u64),
                 Some("SectorData::sector_buf"),
             )?,
 
-            sector_alloc,
-            sector_alloc_by_index,
-            sector_alloc_by_entity,
+            sector_alloc: Allocator::new(SECTOR_DATA_SIZE as u32),
+            sector_alloc_by_index: HashMap::new(),
+            sector_alloc_by_entity: HashMap::new(),
         })
     }
 
@@ -218,14 +185,12 @@ impl SectorData {
                 BufferUsages::VERTEX,
                 device,
                 sector_vertices,
-                None,
                 Some("SectorData::vertex_buf"),
             )?;
             self.index_buf = GpuIndexBuffer::new_vec(
                 BufferUsages::INDEX,
                 device,
                 sector_indices,
-                None,
                 Some("SectorData::index_buf"),
             )?;
         }

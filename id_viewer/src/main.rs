@@ -32,11 +32,11 @@ fn main() -> Result<(), String> {
 
     // Read IWAD.
     let wad = {
-        let bytes = include_bytes!("../../doom2.wad").to_vec();
+        let bytes = include_bytes!("../../freedoom1.wad").to_vec();
         Wad::new(bytes).expect("Failed to parse IWAD")
     };
 
-    let world = World::new(wad, vec![], "MAP01").expect("Failed to create world");
+    let world = World::new(wad, vec![], "E1M1").expect("Failed to create world");
 
     // Create our high level window that will handle events, thinking, and drawing.
 

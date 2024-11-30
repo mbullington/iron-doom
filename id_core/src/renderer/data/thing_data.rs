@@ -8,7 +8,7 @@ use wgpu::BufferUsages;
 
 use crate::{
     components::{CThing, CWorldPos},
-    renderer::helpers::gpu::{GpuStorageBuffer, GpuVertexBuffer},
+    renderer::helpers::gpu::{GpuStorageBuffer, GpuVertexBuffer, LenOrData},
     world::World,
 };
 
@@ -41,7 +41,6 @@ pub struct ThingData {
     pub quad_vertex_buf: GpuVertexBuffer<Vec2>,
 
     pub thing_buf: GpuStorageBuffer<ThingStorageData>,
-
     pub highest_thing_index: u32,
 
     thing_alloc: Allocator,
@@ -49,33 +48,7 @@ pub struct ThingData {
 }
 
 impl ThingData {
-    pub fn new(
-        device: &wgpu::Device,
-        world: &World,
-        palette_image_data: &PaletteImageData,
-    ) -> Result<Self> {
-        let mut things: Vec<ThingStorageData> = Vec::new();
-
-        let mut highest_thing_index: u32 = 0;
-
-        let mut thing_alloc = Allocator::new(THING_DATA_SIZE as u32);
-        let mut thing_alloc_by_entity: HashMap<hecs::Entity, Allocation> = HashMap::new();
-
-        for (id, (c_thing, c_world_pos)) in &mut world.world.query::<(&CThing, &CWorldPos)>() {
-            let thing = _create_thing(id, c_thing, c_world_pos, palette_image_data)?;
-            let alloc = thing_alloc
-                .allocate(1)
-                .ok_or(anyhow::anyhow!("Thing allocation failed, out of space!"))?;
-
-            // Ensure "push" is correct.
-            assert!(alloc.offset == things.len() as u32);
-
-            thing_alloc_by_entity.insert(id, alloc);
-            highest_thing_index = highest_thing_index.max(alloc.offset);
-
-            things.push(thing)
-        }
-
+    pub fn new(device: &wgpu::Device) -> Result<Self> {
         Ok(Self {
             quad_vertex_buf: GpuVertexBuffer::new_vec(
                 BufferUsages::VERTEX,
@@ -88,22 +61,20 @@ impl ThingData {
                     Vec2::new(1., 0.),
                     Vec2::new(1., 1.),
                 ],
-                None,
                 Some("ThingData::quad_vertex_buf"),
             )?,
 
-            thing_buf: GpuStorageBuffer::new_vec(
+            thing_buf: GpuStorageBuffer::new(
                 BufferUsages::STORAGE,
                 device,
-                things,
-                Some(THING_DATA_SIZE as u64),
+                LenOrData::Len(THING_DATA_SIZE as u64),
                 Some("ThingData::thing_buf"),
             )?,
 
-            highest_thing_index,
+            highest_thing_index: 0,
 
-            thing_alloc,
-            thing_alloc_by_entity,
+            thing_alloc: Allocator::new(THING_DATA_SIZE as u32),
+            thing_alloc_by_entity: HashMap::new(),
         })
     }
 

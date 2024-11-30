@@ -8,7 +8,7 @@ use wgpu::BufferUsages;
 
 use crate::{
     components::{CWall, CWallTwoSided},
-    renderer::helpers::gpu::{GpuStorageBuffer, GpuVertexBuffer},
+    renderer::helpers::gpu::{GpuStorageBuffer, GpuVertexBuffer, LenOrData},
     world::World,
 };
 
@@ -46,7 +46,6 @@ pub struct WallData {
 
     /// Stores middle, upper, and lower walls.
     pub wall_buf: GpuStorageBuffer<WallStorageData>,
-
     pub highest_wall_index: u32,
 
     wall_alloc: Allocator,
@@ -54,34 +53,7 @@ pub struct WallData {
 }
 
 impl WallData {
-    pub fn new(
-        device: &wgpu::Device,
-        world: &World,
-        sector_data: &SectorData,
-        palette_image_data: &PaletteImageData,
-    ) -> Result<Self> {
-        let mut walls: Vec<WallStorageData> = Vec::new();
-
-        let mut highest_wall_index: u32 = 0;
-
-        let mut wall_alloc = Allocator::new(WALL_DATA_SIZE as u32);
-        let mut wall_alloc_by_entity: HashMap<hecs::Entity, Allocation> = HashMap::new();
-
-        for (id, c_wall) in &mut world.world.query::<&CWall>() {
-            let wall = _create_wall(id, c_wall, world, sector_data, palette_image_data)?;
-            let alloc = wall_alloc
-                .allocate(1)
-                .ok_or(anyhow::anyhow!("Wall allocation failed, out of space!"))?;
-
-            // Ensure "push" is correct.
-            assert!(alloc.offset == walls.len() as u32);
-
-            wall_alloc_by_entity.insert(id, alloc);
-            highest_wall_index = highest_wall_index.max(alloc.offset);
-
-            walls.push(wall)
-        }
-
+    pub fn new(device: &wgpu::Device) -> Result<Self> {
         Ok(Self {
             quad_vertex_buf: GpuVertexBuffer::new_vec(
                 BufferUsages::VERTEX,
@@ -94,22 +66,19 @@ impl WallData {
                     Vec2::new(1., 0.),
                     Vec2::new(1., 1.),
                 ],
-                None,
                 Some("WallData::quad_vertex_buf"),
             )?,
 
-            wall_buf: GpuStorageBuffer::new_vec(
+            wall_buf: GpuStorageBuffer::new(
                 BufferUsages::STORAGE,
                 device,
-                walls,
-                Some(WALL_DATA_SIZE as u64),
+                LenOrData::Len(WALL_DATA_SIZE as u64),
                 Some("WallData::wall_buf"),
             )?,
+            highest_wall_index: 0,
 
-            highest_wall_index,
-
-            wall_alloc,
-            wall_alloc_by_entity,
+            wall_alloc: Allocator::new(WALL_DATA_SIZE as u32),
+            wall_alloc_by_entity: HashMap::new(),
         })
     }
 
