@@ -26,7 +26,7 @@ pub struct PaletteImageData {
 }
 
 impl PaletteImageData {
-    pub fn new(device: &wgpu::Device, queue: &wgpu::Queue, world: &World) -> Result<Self> {
+    pub fn new(device: &wgpu::Device, world: &World) -> Result<Self> {
         let textures = &world.textures;
 
         let mut image_storage_buf: Vec<u8> = Vec::new();
@@ -129,10 +129,9 @@ impl PaletteImageData {
                 BufferUsages::STORAGE,
                 device,
                 image_storage_buf,
+                Some(PALETTE_IMAGE_DATA_SIZE as u64),
                 Some("PaletteImageData::image_storage_buf"),
-            )?
-            // Resize so we can add more textures later.
-            .resize(device, queue, PALETTE_IMAGE_DATA_SIZE)?,
+            )?,
             image_storage_by_index,
         })
     }

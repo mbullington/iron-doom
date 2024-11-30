@@ -1,6 +1,5 @@
 Short-term:
-- [ ] remove .resize
-- [ ] more documentation
+- [ ] More documentation
 
 Code quality / bugs:
 - [ ] Broken walls on Chex Quest

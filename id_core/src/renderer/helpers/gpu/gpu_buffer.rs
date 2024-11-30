@@ -56,13 +56,25 @@ where
         usage: BufferUsages,
         device: &wgpu::Device,
         data: Vec<DataType>,
+        preallocated_size: Option<u64>,
         label: Option<&'static str>,
     ) -> Result<Self> {
         let usage = usage | BufferUsages::COPY_DST | BufferUsages::COPY_SRC;
-        let buf = create_buf_encase(device, usage, LenOrData::Data(&data), label)?;
+        let buf = create_buf_encase(
+            device,
+            usage,
+            LenOrData::Data(&data, preallocated_size),
+            label,
+        )?;
 
-        let stride = (buf.size() as usize).checked_div(data.len()).unwrap_or(0);
-        let size = buf.size() as usize;
+        let shader_size = DataType::SHADER_SIZE;
+        let stride = shader_size.get()
+            + DataType::METADATA
+                .alignment()
+                .padding_needed_for(shader_size.get());
+
+        let stride = stride as usize;
+        let size = stride * data.len();
 
         Ok(GpuBuffer {
             _phantom: PhantomData,
@@ -104,32 +116,6 @@ where
         }
 
         write_buf_encase(&self.buf, queue, &data, offset as u64)
-    }
-
-    pub fn resize(
-        mut self,
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        new_size: usize,
-    ) -> Result<Self> {
-        let new_buf = create_buf_encase(
-            device,
-            self.usage,
-            LenOrData::<DataType>::Len(new_size as u64),
-            None,
-        )?;
-
-        // Copy the old buffer to the new buffer.
-        let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
-            label: Some("resize"),
-        });
-        encoder.copy_buffer_to_buffer(&self.buf, 0, &new_buf, 0, self.size as u64);
-        queue.submit([encoder.finish()]);
-
-        self.buf = new_buf;
-        self.size = new_size;
-
-        Ok(self)
     }
 
     pub fn bind_group_layout_entry(
@@ -193,10 +179,16 @@ mod internal {
     ) -> Result<wgpu::Buffer> {
         let len_or_mapped_data = match len_or_data {
             LenOrData::Len(len) => LenOrMappedData::Len(len),
-            LenOrData::Data(data) => {
+            LenOrData::Data(data, preallocated_len) => {
                 let mut inner = Vec::new();
                 let mut writer = Writer::new(&data, &mut inner, 0)?;
                 data.write_into(&mut writer);
+
+                // Add padding if needed.
+                let len = preallocated_len.unwrap_or(inner.len() as u64);
+                if (inner.len() as u64) < len {
+                    inner.resize(len as usize, 0);
+                }
 
                 LenOrMappedData::MappedData(inner)
             }

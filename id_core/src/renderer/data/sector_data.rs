@@ -59,7 +59,6 @@ pub struct SectorData {
 impl SectorData {
     pub fn new(
         device: &wgpu::Device,
-        queue: &wgpu::Queue,
         world: &World,
         palette_image_data: &PaletteImageData,
     ) -> Result<Self> {
@@ -95,12 +94,14 @@ impl SectorData {
                 BufferUsages::VERTEX,
                 device,
                 sector_vertices,
+                None,
                 Some("SectorData::vertex_buf"),
             )?,
             index_buf: GpuIndexBuffer::new_vec(
                 BufferUsages::INDEX,
                 device,
                 sector_indices,
+                None,
                 Some("SectorData::index_buf"),
             )?,
             // For sector_buf, it requires us re-doing the bind group,
@@ -109,10 +110,9 @@ impl SectorData {
                 BufferUsages::STORAGE,
                 device,
                 sectors,
+                Some(SECTOR_DATA_SIZE as u64),
                 Some("SectorData::sector_buf"),
-            )?
-            // Resize so we can add more sectors later.
-            .resize(device, queue, SECTOR_DATA_SIZE)?,
+            )?,
 
             sector_alloc,
             sector_alloc_by_index,
@@ -218,12 +218,14 @@ impl SectorData {
                 BufferUsages::VERTEX,
                 device,
                 sector_vertices,
+                None,
                 Some("SectorData::vertex_buf"),
             )?;
             self.index_buf = GpuIndexBuffer::new_vec(
                 BufferUsages::INDEX,
                 device,
                 sector_indices,
+                None,
                 Some("SectorData::index_buf"),
             )?;
         }

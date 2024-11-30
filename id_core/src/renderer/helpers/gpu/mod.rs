@@ -9,5 +9,5 @@ pub use gpu_u8_buffer::*;
 #[derive(Debug)]
 pub enum LenOrData<DataType> {
     Len(u64),
-    Data(DataType),
+    Data(DataType, Option<u64>),
 }

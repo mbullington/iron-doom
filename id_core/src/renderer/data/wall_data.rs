@@ -56,7 +56,6 @@ pub struct WallData {
 impl WallData {
     pub fn new(
         device: &wgpu::Device,
-        queue: &wgpu::Queue,
         world: &World,
         sector_data: &SectorData,
         palette_image_data: &PaletteImageData,
@@ -95,6 +94,7 @@ impl WallData {
                     Vec2::new(1., 0.),
                     Vec2::new(1., 1.),
                 ],
+                None,
                 Some("WallData::wall_quad_vertex_buf"),
             )?,
 
@@ -102,10 +102,9 @@ impl WallData {
                 BufferUsages::STORAGE,
                 device,
                 walls,
+                Some(WALL_DATA_SIZE as u64),
                 Some("WallData::wall_buf"),
-            )?
-            // Resize so we can add more walls later.
-            .resize(device, queue, WALL_DATA_SIZE)?,
+            )?,
 
             highest_wall_index,
 
