@@ -57,6 +57,21 @@ impl Game {
 pub struct GameConfig {
     pub walls: Vec<(String, String)>,
     pub flats: Vec<(String, String)>,
+    pub things: Vec<ThingConfig>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ThingConfig {
+    thing_type: u32,
+
+    radius: u32,
+    height: u32,
+
+    sprite: String,
+    sequence: String,
+    class: String,
+
+    description: String,
 }
 
 impl GameConfig {
