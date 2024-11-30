@@ -10,7 +10,7 @@ use super::{
         window::{Window, WindowContext, WindowSetup},
     },
     main_user_context::MainUserContext,
-    system::{SystemEvent, SystemKeycode, SystemMod},
+    system::{SystemEvent, SystemKeycode},
 };
 
 use MainUserContext as UC;
