@@ -34,6 +34,7 @@ pub enum LumpNamespace {
     Global,
     Map(String),
     Patch,
+    Sprite,
     Flat,
 }
 
@@ -156,6 +157,11 @@ impl Wad {
                 curr_namespace = LumpNamespace::Patch;
             }
 
+            // Entering a sprite block.
+            if lumps[i].name == "S_START" || lumps[i].name == "SS_START" {
+                curr_namespace = LumpNamespace::Sprite;
+            }
+
             // Entering a flat block.
             if lumps[i].name == "F_START" || lumps[i].name == "FF_START" {
                 curr_namespace = LumpNamespace::Flat;
@@ -204,6 +210,11 @@ impl Wad {
 
             // Leaving a patch block.
             if lumps[i].name == "P_END" || lumps[i].name == "PP_END" {
+                curr_namespace = LumpNamespace::Global;
+            }
+
+            // Leaving a sprite block.
+            if lumps[i].name == "S_END" || lumps[i].name == "SS_END" {
                 curr_namespace = LumpNamespace::Global;
             }
 
