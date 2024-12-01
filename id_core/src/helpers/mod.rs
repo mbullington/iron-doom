@@ -57,21 +57,3 @@ pub trait Movable {
 
     fn rotate_pitch_yaw(&mut self, pitch: f32, yaw: f32);
 }
-
-pub trait UnwrapOrFn<T> {
-    fn unwrap_or_fn<F>(self, f: F) -> T
-    where
-        F: FnOnce() -> T;
-}
-
-impl<T> UnwrapOrFn<T> for Option<T> {
-    fn unwrap_or_fn<F>(self, f: F) -> T
-    where
-        F: FnOnce() -> T,
-    {
-        match self {
-            Some(val) => val,
-            None => f(),
-        }
-    }
-}

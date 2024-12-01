@@ -89,29 +89,7 @@ impl WallData {
         sector_data: &SectorData,
         palette_image_data: &PaletteImageData,
     ) -> Result<()> {
-        // First handle changed, which will update the data.
-        for id in world.changed_set.changed() {
-            if !world.world.satisfies::<&CWall>(*id)? {
-                continue;
-            }
-
-            let c_wall = world.world.get::<&CWall>(*id)?;
-            let alloc = *self
-                .wall_alloc_by_entity
-                .get(id)
-                .ok_or(anyhow::anyhow!("Wall index not found."))?;
-
-            let wall = _create_wall(*id, &c_wall, world, sector_data, palette_image_data)?;
-
-            // Write the data to the buffer.
-            self.wall_buf.write_to_offset(
-                queue,
-                wall,
-                alloc.offset as usize * self.wall_buf.stride,
-            )?;
-        }
-
-        // Next handle removed, so the allocator can free up space.
+        // First handle removed, so the allocator can free up space.
         for id in world.changed_set.removed() {
             if !world.world.satisfies::<&CWall>(*id)? {
                 continue;
@@ -125,18 +103,61 @@ impl WallData {
             self.wall_alloc.free(alloc);
         }
 
-        // Lastly handle spawned, which will add new walls.
-        for id in world.changed_set.spawned() {
+        // Next handle changed & spawned entities.
+        for id in world
+            .changed_set
+            .changed()
+            .iter()
+            .chain(world.changed_set.spawned().iter())
+        {
             if !world.world.satisfies::<&CWall>(*id)? {
                 continue;
             }
 
             let c_wall = world.world.get::<&CWall>(*id)?;
-            let wall = _create_wall(*id, &c_wall, world, sector_data, palette_image_data)?;
+
+            // Check if wall is double-sided.
+            let back_sector_index = world
+                .world
+                .query_one::<&CWallTwoSided>(*id)?
+                .get()
+                .map(|two_sided| two_sided.back_sector_index);
+
+            let wall = WallStorageData {
+                wall_type: c_wall.wall_type.bits(),
+
+                start_vert: c_wall.start_vert,
+                end_vert: c_wall.end_vert,
+
+                flags: c_wall.flags,
+
+                sector_index: sector_data
+                    .sector_alloc_by_index
+                    .get(&c_wall.sector_index)
+                    .ok_or(anyhow::anyhow!("Sector index not found."))?
+                    .offset,
+
+                back_sector_index: if let Some(idx) = back_sector_index {
+                    sector_data
+                        .sector_alloc_by_index
+                        .get(&idx)
+                        .ok_or(anyhow::anyhow!("Back sector index not found."))?
+                        .offset
+                } else {
+                    u32::MAX
+                },
+
+                palette_image_index: palette_image_data.lookup_texture(world, *id)?,
+
+                x_offset: c_wall.x_offset as i32,
+                y_offset: c_wall.y_offset as i32,
+            };
+
             let alloc = self
-                .wall_alloc
-                .allocate(1)
-                .ok_or(anyhow::anyhow!("Wall allocation failed, out of space!"))?;
+                .wall_alloc_by_entity
+                .get(id)
+                .copied()
+                .unwrap_or_else(|| self.wall_alloc.allocate(1).unwrap());
 
             self.wall_alloc_by_entity.insert(*id, alloc);
             self.highest_wall_index = self.highest_wall_index.max(alloc.offset);
@@ -151,49 +172,4 @@ impl WallData {
 
         Ok(())
     }
-}
-
-fn _create_wall(
-    id: hecs::Entity,
-    c_wall: &CWall,
-    world: &World,
-    sector_data: &SectorData,
-    palette_image_data: &PaletteImageData,
-) -> Result<WallStorageData> {
-    // Check if wall is double-sided.
-    let back_sector_index = world
-        .world
-        .query_one::<&CWallTwoSided>(id)?
-        .get()
-        .map(|two_sided| two_sided.back_sector_index);
-
-    Ok(WallStorageData {
-        wall_type: c_wall.wall_type.bits(),
-
-        start_vert: c_wall.start_vert,
-        end_vert: c_wall.end_vert,
-
-        flags: c_wall.flags,
-
-        sector_index: sector_data
-            .sector_alloc_by_index
-            .get(&c_wall.sector_index)
-            .ok_or(anyhow::anyhow!("Sector index not found."))?
-            .offset,
-
-        back_sector_index: if let Some(idx) = back_sector_index {
-            sector_data
-                .sector_alloc_by_index
-                .get(&idx)
-                .ok_or(anyhow::anyhow!("Back sector index not found."))?
-                .offset
-        } else {
-            u32::MAX
-        },
-
-        palette_image_index: palette_image_data.lookup_texture(world, id)?,
-
-        x_offset: c_wall.x_offset as i32,
-        y_offset: c_wall.y_offset as i32,
-    })
 }

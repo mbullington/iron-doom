@@ -10,7 +10,6 @@ use id_map_format::{LumpNamespace, Map, Patch};
 
 use crate::{
     components::{CTexture, CTextureFloor},
-    helpers::UnwrapOrFn,
     renderer::helpers::gpu::GpuU8StorageBuffer,
     world::World,
 };
@@ -153,7 +152,7 @@ impl PaletteImageData {
                 .image_storage_by_index
                 .get(texture)
                 .map(|x| *x as u32)
-                .unwrap_or_fn(|| {
+                .unwrap_or_else(|| {
                     eprintln!("Texture not found: {:?}", texture);
                     MAGIC_OFFSET_INVALID
                 }),
@@ -167,7 +166,7 @@ impl PaletteImageData {
                 .image_storage_by_index
                 .get(&texture.0)
                 .map(|x| *x as u32)
-                .unwrap_or_fn(|| {
+                .unwrap_or_else(|| {
                     eprintln!("Texture not found: {:?}", texture.0);
                     MAGIC_OFFSET_INVALID
                 }),
