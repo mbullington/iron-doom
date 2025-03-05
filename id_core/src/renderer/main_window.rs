@@ -15,10 +15,7 @@ use crate::{
     },
 };
 
-use super::{
-    data::SectorData, helpers::movement_controller::MovementController,
-    main_user_context::MainUserContext,
-};
+use super::{data::SectorData, helpers::MovementController, main_user_context::MainUserContext};
 
 pub struct MainWindow {
     movement_controller: MovementController,

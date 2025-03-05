@@ -24,6 +24,10 @@ fn vs_main(
     @builtin(instance_index) instance_idx: u32,
 ) -> VsOutput {
     let wall = walls[instance_idx];
+    if wall.wall_type == WALL_TYPE_INVALID {
+        discard;
+    }
+
     let sector = sectors[wall.sector_idx];
 
     let start_vert = wall.start_vert;

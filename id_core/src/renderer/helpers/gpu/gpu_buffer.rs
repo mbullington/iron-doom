@@ -91,7 +91,7 @@ where
         _write_buf_encase(&self.buf, queue, data, 0)
     }
 
-    pub fn write_vec(&mut self, queue: &wgpu::Queue, data: Vec<DataType>) -> Result<()> {
+    pub fn write_vec(&mut self, queue: &wgpu::Queue, data: &[DataType]) -> Result<()> {
         if data.len() > self.size / self.stride {
             return Err(anyhow::anyhow!(
                 "Data length {} is greater than buffer size {}",
@@ -100,7 +100,7 @@ where
             ));
         }
 
-        _write_buf_encase(&self.buf, queue, &data, 0)
+        _write_buf_encase(&self.buf, queue, data, 0)
     }
 
     pub fn write_to_offset(
@@ -118,6 +118,23 @@ where
         }
 
         _write_buf_encase(&self.buf, queue, &data, offset as u64)
+    }
+
+    pub fn write_vec_to_index(
+        &mut self,
+        queue: &wgpu::Queue,
+        data: &[DataType],
+        index: usize,
+    ) -> Result<()> {
+        if data.len() + index > self.size / self.stride {
+            return Err(anyhow::anyhow!(
+                "Data length {} is greater than buffer size {}",
+                data.len(),
+                self.size
+            ));
+        }
+
+        _write_buf_encase(&self.buf, queue, &data, (index * self.stride) as u64)
     }
 
     pub fn bind_group_layout_entry(

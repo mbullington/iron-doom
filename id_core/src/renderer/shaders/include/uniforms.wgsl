@@ -38,9 +38,10 @@ struct WadSector {
     light_level: u32
 }
 
-const WALL_TYPE_UPPER = u32(0);
-const WALL_TYPE_MIDDLE = u32(1);
-const WALL_TYPE_LOWER = u32(2);
+const WALL_TYPE_INVALID = u32(0);
+const WALL_TYPE_UPPER = u32(1);
+const WALL_TYPE_MIDDLE = u32(2);
+const WALL_TYPE_LOWER = u32(3);
 
 const MAGIC_BACKSECTOR_INVALID = 0xFFFFFFFFu;
 

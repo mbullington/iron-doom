@@ -8,14 +8,19 @@ use wgpu::BufferUsages;
 
 use crate::{
     components::{CThing, CWorldPos},
-    renderer::helpers::gpu::{GpuStorageBuffer, GpuVertexBuffer, LenOrData},
+    renderer::helpers::{
+        gpu::{GpuStorageBuffer, GpuVertexBuffer, LenOrData},
+        SparseVec,
+    },
     world::World,
 };
 
 use super::{limits::THING_DATA_SIZE, PaletteImageData};
 
-#[derive(ShaderType)]
+#[derive(ShaderType, Default)]
 pub struct ThingStorageData {
+    pub is_valid: u32,
+
     pub thing_type: u32,
     pub spawn_flags: u32,
 
@@ -84,6 +89,8 @@ impl ThingData {
         world: &World,
         _palette_image_data: &PaletteImageData,
     ) -> Result<()> {
+        let mut thing_writes = SparseVec::<ThingStorageData>::default();
+
         // First handle removed, so the allocator can free up space.
         for id in world.changed_set.removed() {
             if !world.world.satisfies::<&CThing>(*id)? {
@@ -94,6 +101,9 @@ impl ThingData {
                 .thing_alloc_by_entity
                 .get(id)
                 .ok_or(anyhow::anyhow!("Wall index not found."))?;
+
+            // Write the data to the buffer.
+            thing_writes.insert(alloc.offset as usize, ThingStorageData::default());
 
             self.thing_alloc.free(alloc);
         }
@@ -127,6 +137,8 @@ impl ThingData {
             let (c_thing, c_world_pos) = query.get().unwrap();
 
             let thing = ThingStorageData {
+                is_valid: 1,
+
                 thing_type: c_thing.thing_type as u32,
                 spawn_flags: c_thing.spawn_flags as u32,
 
@@ -153,11 +165,13 @@ impl ThingData {
             self.highest_thing_index = self.highest_thing_index.max(alloc.offset);
 
             // Write the data to the buffer.
-            self.thing_buf.write_to_offset(
-                queue,
-                thing,
-                alloc.offset as usize * self.thing_buf.stride,
-            )?;
+            thing_writes.insert(alloc.offset as usize, thing);
+        }
+
+        // Write any GPU buffers.
+        for (start, items) in thing_writes {
+            self.thing_buf
+                .write_vec_to_index(queue, &items, start as usize)?;
         }
 
         Ok(())

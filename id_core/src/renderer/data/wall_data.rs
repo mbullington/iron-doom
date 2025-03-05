@@ -14,9 +14,9 @@ use crate::{
 
 use super::{limits::WALL_DATA_SIZE, PaletteImageData, SectorData};
 
-#[derive(ShaderType)]
+#[derive(ShaderType, Default)]
 pub struct WallStorageData {
-    // 0 == upper, 1 == middle, 2 == lower
+    // 0 == invalid, 1 == upper, 2 == middle, 3 == lower
     pub wall_type: u32,
 
     pub start_vert: Vec2,
@@ -89,6 +89,8 @@ impl WallData {
         sector_data: &SectorData,
         palette_image_data: &PaletteImageData,
     ) -> Result<()> {
+        let mut thing_writes = SparseVec::<ThingStorageData>::default();
+
         // First handle removed, so the allocator can free up space.
         for id in world.changed_set.removed() {
             if !world.world.satisfies::<&CWall>(*id)? {
@@ -124,7 +126,8 @@ impl WallData {
                 .map(|two_sided| two_sided.back_sector_index);
 
             let wall = WallStorageData {
-                wall_type: c_wall.wall_type.bits(),
+                // Add one so we're not invalid.
+                wall_type: c_wall.wall_type.bits() + 1,
 
                 start_vert: c_wall.start_vert,
                 end_vert: c_wall.end_vert,
