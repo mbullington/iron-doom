@@ -1,0 +1,19 @@
+[package]
+name = "id-viewer-web"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+id-core = { path = "../id_core" }
+id-map-format = { path = "../id_map_format" }
+
+winit = "0.29.15"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["Window", "Document", "HtmlCanvasElement", "File", "FileList", "FileReader", "Blob", "Url", "Element", "HtmlInputElement", "EventTarget", "DragEvent", "DataTransfer", "DataTransferItemList", "DataTransferItem"] }
+pollster = "0.3"
+ultraviolet = { workspace = true }
+js-sys = "0.3"

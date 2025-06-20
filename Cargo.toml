@@ -4,6 +4,7 @@ members = [
     "id_game_config",
     "id_core",
     "id_viewer",
+    "id_viewer_web",
     "third_party/egui_console",
 ]
 
