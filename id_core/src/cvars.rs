@@ -40,7 +40,7 @@ pub const DEFAULT_CVARS: &[(&str, CVar)] = &[
         "r_lightfalloff",
         CVar {
             description: "",
-            value: CVarValue::F32(16.0),
+            value: CVarValue::F32(8.0),
         },
     ),
     // Number of MSAA samples.

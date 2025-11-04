@@ -42,5 +42,5 @@ fn draw_sky(
 
     let palette_index = sample_image(palette_image_index, world_u, world_v);
     let color = palette[palette_index] / 256.0;
-    return srgb_to_linear(vec4f(color, 1.0));
+    return vec4f(color, 1.0);
 }

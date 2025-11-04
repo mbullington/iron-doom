@@ -16,11 +16,11 @@ Feature enhancements:
 - [ ] **P1:** [Flickering, other effects, etc...](https://doomwiki.org/wiki/Lighting_effects#:~:text=The%20sector's%20light%20is%20the,used%20for%20the%20%22flash%22.)
 
 Maybe in the future:
-- [ ] Godot 4 exporter
-  * [ ] Support for PNGs/JPEGs
-  * [ ] Support for floor-on-wall, wall-on-floor
+- [ ] Support for PNGs/JPEGs
+- [ ] Support for floor-on-wall, wall-on-floor
 - [ ] Boom / DeHackEd compatibility
 - [ ] **P1:** DOOM 64 support
+- [ ] **P1:** Switch from WGPU to Slang
 
 Non goals:
 - [ ] HeXen support (too invasive)

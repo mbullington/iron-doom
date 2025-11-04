@@ -14,7 +14,7 @@ impl Default for GpuFrameTextureDescriptor {
     fn default() -> Self {
         Self {
             label: None,
-            format: wgpu::TextureFormat::Bgra8UnormSrgb,
+            format: wgpu::TextureFormat::Bgra8Unorm,
             mip_level_count: 1,
             sample_count: 1,
             view_formats: &[],

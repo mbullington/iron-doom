@@ -13,18 +13,6 @@ fn mod2i(a: i32, b: i32) -> i32 {
     return m;
 }
 
-fn srgb_to_linear(
-    coord: vec4f
-) -> vec4f {
-    let linear = vec4f(
-        pow(coord.r, 2.2),
-        pow(coord.g, 2.2),
-        pow(coord.b, 2.2),
-        coord.a
-    );
-    return linear;
-}
-
 fn get_image_width_height(idx: u32) -> vec2u {
     let idx_dims = idx / u32(4);
     let width = images[idx_dims];
@@ -59,7 +47,7 @@ fn get_light_index(light_level: u32, light_offset: i32, depth: f32) -> u32 {
     var light_index = u32(0);
     if (ubo.cvar_uniforms.r_fullbright != 1) {
         light_index = u32(31) - (light_level >> 3);
-        light_index = max(min(light_index + u32(depth / ubo.cvar_uniforms.r_lightfalloff), u32(31)), min(u32(6), light_index));
+        light_index = min(light_index + u32(depth / ubo.cvar_uniforms.r_lightfalloff), u32(31));
     }
 
     light_index = u32(clamp(i32(light_index) + light_offset, i32(0), i32(31)));

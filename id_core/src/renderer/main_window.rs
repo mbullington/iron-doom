@@ -65,7 +65,7 @@ fn _create_sector_render_pipeline(
 
     let fragment_state = Some(wgpu::FragmentState {
         targets: &[Some(wgpu::ColorTargetState {
-            format: wgpu::TextureFormat::Bgra8UnormSrgb,
+            format: wgpu::TextureFormat::Bgra8Unorm,
             blend: None,
             write_mask: wgpu::ColorWrites::ALL,
         })],
@@ -131,7 +131,7 @@ fn _create_wall_render_pipeline(
 
     let fragment_state = Some(wgpu::FragmentState {
         targets: &[Some(wgpu::ColorTargetState {
-            format: wgpu::TextureFormat::Bgra8UnormSrgb,
+            format: wgpu::TextureFormat::Bgra8Unorm,
             blend: Some(wgpu::BlendState::ALPHA_BLENDING),
             write_mask: wgpu::ColorWrites::ALL,
         })],

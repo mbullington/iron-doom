@@ -153,5 +153,5 @@ fn fs_main(
     palette_index = GET_U8(colormap, light_index * u32(256) + palette_index);
     let color = palette[palette_index] / 255.0;
 
-    return srgb_to_linear(vec4f(color, 1.0));
+    return vec4f(color, 1.0);
 }

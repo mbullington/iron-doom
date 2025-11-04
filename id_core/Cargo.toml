@@ -10,7 +10,7 @@ id-game-config = { path = "../id_game_config" }
 
 # core graphics
 wgpu = { version = "22.1.0" }
-wgpu-pp = "1.0.0"
+wgpu-pp = "1.0.1"
 raw-window-handle = "0.6.2"
 
 # entity component system
