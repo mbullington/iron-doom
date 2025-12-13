@@ -34,8 +34,6 @@ Soon this will be accessible via a Web interface.
 
 ## AI Disclosure
 
-> I feel in Nov 2025, this is necessary.
-
 I did not use agentic Large Language Models (LLMs) to create this software. This would have gone against my goals for the software:
 
 1. Learn Rust.
